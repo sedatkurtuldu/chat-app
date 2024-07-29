@@ -9,13 +9,21 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@firebase/auth": "^1.7.5",
+    "@react-native-async-storage/async-storage": "^1.24.0",
+    "@react-native-firebase/firestore": "^20.3.0",
+    "@react-native-firebase/storage": "^20.3.0",
     "expo": "~51.0.22",
     "expo-status-bar": "~1.12.1",
+    "firebase": "^10.12.4",
+    "nativewind": "^2.0.11",
     "react": "18.2.0",
-    "react-native": "0.74.3"
+    "react-native": "0.74.3",
+    "socket.io-client": "^4.7.5"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.20.0",
+    "tailwindcss": "3.3.2"
   },
   "private": true
 }
