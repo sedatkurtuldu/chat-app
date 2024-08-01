@@ -2,12 +2,18 @@ import { StyleSheet, TextInput, View } from 'react-native';
 import React from 'react';
 import AntDesign from '@expo/vector-icons/AntDesign';
 
-const TextInputComponent = ({ placeholder, iconName, setEmail, setPassword, value }) => {
+const TextInputComponent = ({ placeholder, iconName, setLoginEmail, setLoginPassword, setRegisterUserName, setRegisterEmail, setRegisterPassword, value }) => {
     const onChangeText = (text) => {
-        if (placeholder === "E-Posta") {
-            setEmail(text);
-        } else if (placeholder === "Parola") {
-            setPassword(text);
+        if (setLoginEmail && placeholder === "E-Posta") {
+            setLoginEmail(text);
+        } else if (setLoginPassword && placeholder === "Parola") {
+            setLoginPassword(text);
+        } else if (setRegisterEmail && placeholder === "E-Posta") {
+            setRegisterEmail(text);
+        } else if (setRegisterPassword && placeholder === "Parola") {
+            setRegisterPassword(text);
+        } else if (setRegisterUserName && placeholder === "Kullanıcı Adı") {
+            setRegisterUserName(text);
         }
     };
 

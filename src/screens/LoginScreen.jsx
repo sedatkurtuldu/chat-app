@@ -64,8 +64,8 @@ const LoginScreen = ({ navigation }) => {
         <Text className="text-2xl font-medium">Giriş Yap</Text>
       </View>
       <View className="items-center">
-        <TextInputComponent placeholder="E-Posta" iconName="mail" setEmail={setEmail} />
-        <TextInputComponent placeholder="Parola" iconName="lock" setPassword={setPassword}/>
+        <TextInputComponent placeholder="E-Posta" iconName="mail" setLoginEmail={setEmail} />
+        <TextInputComponent placeholder="Parola" iconName="lock" setLoginPassword={setPassword}/>
       </View>
       <TouchableOpacity className="w-11/12 my-2 items-end" activeOpacity={0.8}>
         <Text className="text-gray-700">Şifreni mi unuttun?</Text>
