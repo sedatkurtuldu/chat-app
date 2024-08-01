@@ -25,18 +25,18 @@ const Router = () => {
   if (initializing) return null;
 
   return (
-    <Stack.Navigator
-      initialRouteName={user ? "HomeScreen" : "LoginScreen"}
-      screenOptions={{ headerShown: user ? true : false }}
-    >
-      {user ? (
-        <Stack.Screen name="HomeScreen" component={HomeScreen} />
-      ) : (
-        <>
-          <Stack.Screen name="LoginScreen" component={LoginScreen} />
-          <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
-        </>
-      )}
+    <Stack.Navigator initialRouteName="LoginScreen">
+      <Stack.Screen name="HomeScreen" component={HomeScreen} />
+      <Stack.Screen
+        name="LoginScreen"
+        component={LoginScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="RegisterScreen"
+        component={RegisterScreen}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 };

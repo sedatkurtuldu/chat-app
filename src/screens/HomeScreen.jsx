@@ -1,32 +1,8 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { auth } from '../../server/firebase';
-import * as SecureStore from "expo-secure-store";
 
 const HomeScreen = ({ navigation }) => {
-  const [token, setToken] = useState("");
-
-  console.log("Token: ", token)
-  useEffect(() => {
-    const token = getUserToken();
-
-    setToken(token);
-  }, [])
-  
-
-  async function getUserToken() {
-    try {
-      const userToken = await SecureStore.getItemAsync("userToken");
-      if (userToken) {
-        console.log("User token:", userToken);
-        return userToken;
-      } else {
-        console.log("No user token found");
-      }
-    } catch (error) {
-      console.error("Failed to retrieve user token:", error);
-    }
-  }
   
   const logOut = () => {
     auth.signOut()

@@ -11,14 +11,14 @@ import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import TextInputComponent from "../components/TextInputComponent";
 import * as ImagePicker from "expo-image-picker";
-import * as SecureStore from "expo-secure-store";
 import ImagePickerComponent from "../components/ImagePickerComponent";
 import "firebase/auth";
 import "firebase/firestore";
-import axios from "axios";
 import { auth, db } from "../../server/firebase";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, getIdToken } from "firebase/auth";
 import { addDoc, collection } from "firebase/firestore";
+import { hashPassword } from "../../helpers/Helpers";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const RegisterScreen = ({ navigation }) => {
   const [userName, setUserName] = useState("");
@@ -71,39 +71,30 @@ const RegisterScreen = ({ navigation }) => {
     }
   
     try {
+      const hashedPassword = await hashPassword(password);
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
   
       await addDoc(collection(db, "Users"), {
         userId: user.uid,
         email: user.email,
+        password: hashedPassword,
         displayName: userName,
         profileImage: image,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
-
-      //BURADA PC'NİN IP'Sİ GEREK!!!
-      const response = await axios.get(`http://192.168.1.207:3000/api/createToken?userId=${user.uid}&email=${user.email}`);
   
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-  
-      const data = await response.json();
-      const { token } = data;
-      console.log("Received JWT:", token);
-  
-      await SecureStore.setItemAsync("userToken", token);
-  
-      await signInWithEmailAndPassword(auth, email, password);
-  
+      const token = await getIdToken(user);
+      await AsyncStorage.setItem('userToken', token);
       navigation.navigate("HomeScreen");
+  
     } catch (error) {
-      console.error("Error registering user: ", error);
+      console.error("Kullanıcı kaydı hatası: ", error);
       Alert.alert("Kayıt Hatası", "Kullanıcı kaydı sırasında bir hata oluştu.");
     }
   };
+
 
   return (
     <SafeAreaView className="flex-1 bg-white">

@@ -2,13 +2,31 @@ const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 const cors = require('cors');
-const tokenRouter = require('./routes/token');
+const admin = require('firebase-admin');
+
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
+const tokenRouter = express.Router();
 
 app.use(express.json());
 app.use(cors());
+
+const serviceAccount = require('./chat-app-95ba0-firebase-adminsdk-ljugr-60a4dd23b9.json');
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
+tokenRouter.get('/auth', async (req, res) => {
+  const token = req.query.token;
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    res.status(200).send("Kullanıcı kimliği doğrulandı");
+  } catch (error) {
+    res.status(401).send("Kullanıcı kimliği doğrulanamadı");
+  }
+});
 
 app.use('/api', tokenRouter);
 

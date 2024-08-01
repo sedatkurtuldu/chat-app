@@ -1,57 +1,97 @@
-import {
-  Image,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Image, Text, TouchableOpacity, View, Alert } from "react-native";
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import TextInputComponent from "../components/TextInputComponent";
 import { signInWithEmailAndPassword } from "@firebase/auth";
 import { auth } from "../../server/firebase";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { apiConstant } from "../../constants/apiConstant";
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
-
-    if(email === "" && password === ""){
-      Alert.alert(
-        "Başarısız!",
-        "E-Posta ve Şifre alanı boş geçilemez.",
-        [
-          {
-            text: "TAMAM",
-          },
-        ]
-      );
-      return;
-    }
-
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const savedToken = await AsyncStorage.getItem("userToken");
 
-      navigation.navigate("HomeScreen");
+      if (savedToken) {
+        
+        fetch(`${apiConstant.apiUrlAsPcIp}/auth?token=${savedToken}`)
+        .then(async (response) => {
+          if (response.status === 200) {
+            navigation.navigate("HomeScreen");
+          } else {
+            Alert.alert(
+              "Başarısız!",
+              "Token geçersiz. Lütfen tekrar giriş yapın.",
+              [{ text: "TAMAM" }]
+            );
+          }
+        })
+        .catch((error) => {
+          console.error(
+            "Token kontrolü sırasında bir hata oluştu: ",
+            error.message
+          );
+          Alert.alert(
+            "Başarısız!",
+            "Token kontrolü sırasında bir hata oluştu, lütfen tekrar deneyin.",
+            [{ text: "TAMAM" }]
+          );
+        });
+      } else {
+        if (email === "" || password === "") {
+          Alert.alert("Başarısız!", "E-Posta ve Şifre alanı boş geçilemez.", [
+            { text: "TAMAM" },
+          ]);
+          return;
+        }
+
+        const userCredential = await signInWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+        const token = await getIdToken(userCredential.user);
+
+        await AsyncStorage.setItem("userToken", token);
+
+        fetch(`${apiConstant.apiUrlAsPcIp}/auth?token=${savedToken}`)
+        .then(async (response) => {
+          if (response.status === 200) {
+            navigation.navigate("HomeScreen");
+          } else {
+            Alert.alert(
+              "Başarısız!",
+              "Giriş yaparken bir hata oluştu, lütfen tekrar deneyin.",
+              [{ text: "TAMAM" }]
+            );
+          }
+        })
+        .catch((error) => {
+          console.error("Giriş yaparken bir hata oluştu: ", error.message);
+            Alert.alert(
+              "Başarısız!",
+              "Giriş yaparken bir hata oluştu, lütfen tekrar deneyin.",
+              [{ text: "TAMAM" }]
+            );
+        });
+      }
     } catch (error) {
-
       console.error("Giriş yaparken bir hata oluştu: ", error.message);
-
       Alert.alert(
         "Başarısız!",
         "Giriş yaparken bir hata oluştu, lütfen tekrar deneyin.",
-        [
-          {
-            text: "TAMAM",
-          },
-        ]
+        [{ text: "TAMAM" }]
       );
     }
   };
 
   const handleRegisterPage = () => {
-    navigation.navigate("RegisterScreen")
-  }
+    navigation.navigate("RegisterScreen");
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <View className="justify-center items-center">
@@ -64,15 +104,23 @@ const LoginScreen = ({ navigation }) => {
         <Text className="text-2xl font-medium">Giriş Yap</Text>
       </View>
       <View className="items-center">
-        <TextInputComponent placeholder="E-Posta" iconName="mail" setLoginEmail={setEmail} />
-        <TextInputComponent placeholder="Parola" iconName="lock" setLoginPassword={setPassword}/>
+        <TextInputComponent
+          placeholder="E-Posta"
+          iconName="mail"
+          setLoginEmail={setEmail}
+        />
+        <TextInputComponent
+          placeholder="Parola"
+          iconName="lock"
+          setLoginPassword={setPassword}
+        />
       </View>
       <TouchableOpacity className="w-11/12 my-2 items-end" activeOpacity={0.8}>
         <Text className="text-gray-700">Şifreni mi unuttun?</Text>
       </TouchableOpacity>
       <View className="items-center justify-center my-2 ">
         <TouchableOpacity
-        onPress={handleLogin}
+          onPress={handleLogin}
           className="p-3 bg-violet-600 rounded-md w-11/12 items-center"
           activeOpacity={0.9}
         >
@@ -82,7 +130,12 @@ const LoginScreen = ({ navigation }) => {
 
       <View className="flex-row items-center justify-center gap-1.5 my-1">
         <Text className="text-gray-700">Hesabın mı yok?</Text>
-        <Text className="text-violet-800 font-medium" onPress={handleRegisterPage}>Kaydol!</Text>
+        <Text
+          className="text-violet-800 font-medium"
+          onPress={handleRegisterPage}
+        >
+          Kaydol!
+        </Text>
       </View>
     </SafeAreaView>
   );
