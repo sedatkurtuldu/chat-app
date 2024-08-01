@@ -1,53 +1,57 @@
 import {
   Image,
-  StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import TextInputComponent from "../components/TextInputComponent";
+import { signInWithEmailAndPassword } from "@firebase/auth";
+import { auth } from "../../server/firebase";
 
-const LoginScreen = () => {
-  const [message, setMessage] = useState("");
-  const [receivedMessage, setReceivedMessage] = useState("");
-  const ws = useRef(null);
+const LoginScreen = ({ navigation }) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  useEffect(() => {
-    ws.current = new WebSocket("ws://192.168.1.207:3000");
+  const handleLogin = async () => {
 
-    ws.current.onopen = () => {
-      console.log("Bağlantı açıldı");
-    };
+    if(email === "" && password === ""){
+      Alert.alert(
+        "Başarısız!",
+        "E-Posta ve Şifre alanı boş geçilemez.",
+        [
+          {
+            text: "TAMAM",
+          },
+        ]
+      );
+      return;
+    }
 
-    ws.current.onmessage = (e) => {
-      ı;
-      console.log("Alınan mesaj:", e.data);
-      setReceivedMessage(e.data);
-    };
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
 
-    ws.current.onerror = (e) => {
-      console.log("Hata:", e.message);
-    };
+      navigation.navigate("HomeScreen");
+    } catch (error) {
 
-    ws.current.onclose = (e) => {
-      console.log("Bağlantı kapandı:", e.code, e.reason);
-    };
+      console.error("Giriş yaparken bir hata oluştu: ", error.message);
 
-    return () => {
-      ws.current.close();
-    };
-  }, []);
-
-  const sendMessage = () => {
-    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-      ws.current.send(message);
-    } else {
-      console.log("WebSocket bağlantısı açık değil");
+      Alert.alert(
+        "Başarısız!",
+        "Giriş yaparken bir hata oluştu, lütfen tekrar deneyin.",
+        [
+          {
+            text: "TAMAM",
+          },
+        ]
+      );
     }
   };
+
+  const handleRegisterPage = () => {
+    navigation.navigate("RegisterScreen")
+  }
   return (
     <SafeAreaView className="flex-1 bg-white">
       <View className="justify-center items-center">
@@ -60,14 +64,15 @@ const LoginScreen = () => {
         <Text className="text-2xl font-medium">Giriş Yap</Text>
       </View>
       <View className="items-center">
-        <TextInputComponent placeholder="E-Posta" iconName="mail" />
-        <TextInputComponent placeholder="Parola" iconName="lock" />
+        <TextInputComponent placeholder="E-Posta" iconName="mail" setEmail={setEmail} />
+        <TextInputComponent placeholder="Parola" iconName="lock" setPassword={setPassword}/>
       </View>
       <TouchableOpacity className="w-11/12 my-2 items-end" activeOpacity={0.8}>
         <Text className="text-gray-700">Şifreni mi unuttun?</Text>
       </TouchableOpacity>
       <View className="items-center justify-center my-2 ">
         <TouchableOpacity
+        onPress={handleLogin}
           className="p-3 bg-violet-600 rounded-md w-11/12 items-center"
           activeOpacity={0.9}
         >
@@ -77,7 +82,7 @@ const LoginScreen = () => {
 
       <View className="flex-row items-center justify-center gap-1.5 my-1">
         <Text className="text-gray-700">Hesabın mı yok?</Text>
-        <Text className="text-violet-800 font-medium">Kaydol!</Text>
+        <Text className="text-violet-800 font-medium" onPress={handleRegisterPage}>Kaydol!</Text>
       </View>
     </SafeAreaView>
   );

@@ -1,0 +1,108 @@
+import {
+  Button,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import React, { useState } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
+import TextInputComponent from "../components/TextInputComponent";
+import * as ImagePicker from "expo-image-picker";
+import * as Permissions from "expo-permissions";
+import ImagePickerComponent from "../components/ImagePickerComponent";
+
+const RegisterScreen = ({ navigation }) => {
+  const [image, setImage] = useState(null);
+
+  console.log("Image: ", image);
+
+  const handleLoginPage = () => {
+    navigation.navigate("LoginScreen");
+  };
+
+  const askForPermissions = async () => {
+    const { status: cameraStatus } =
+      await ImagePicker.requestCameraPermissionsAsync();
+    const { status: galleryStatus } =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (cameraStatus !== "granted" || galleryStatus !== "granted") {
+      Alert.alert(
+        "İzin Gerekli",
+        "Üzgünüz, bu işlemi gerçekleştirebilmek için kamera ve galeri izinlerine ihtiyacımız var!"
+      );
+    }
+  };
+
+  const pickImage = async () => {
+    await askForPermissions();
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    console.log("Image Pick Result:", result);
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setImage(result.assets[0].uri);
+    } else {
+      Alert.alert(
+        "Resim Seçimi İptal Edildi",
+        "Resim seçimi iptal edildi veya herhangi bir resim seçilmedi."
+      );
+    }
+  };
+  return (
+    <SafeAreaView className="flex-1 bg-white">
+      <ScrollView>
+        <View className="justify-center items-center">
+          <Image
+            source={
+              image == null
+                ? require("../../assets/register.png")
+                : { uri: image }
+            }
+            className="w-48 h-48 mt-10 rounded-xl"
+          />
+        </View>
+        <View className="my-3 items-center">
+          <Text className="text-2xl font-medium">Kaydol</Text>
+        </View>
+        <View className="items-center">
+          <TextInputComponent placeholder="Kullanıcı Adı" iconName="user" />
+          <TextInputComponent placeholder="E-Posta" iconName="mail" />
+          <TextInputComponent placeholder="Parola" iconName="lock" />
+          <ImagePickerComponent onPress={pickImage} />
+        </View>
+        <View className="items-center justify-center my-2 ">
+          <TouchableOpacity
+            className="p-3 bg-violet-600 rounded-md w-11/12 items-center"
+            activeOpacity={0.9}
+          >
+            <Text className="font-medium text-white text-lg">Kaydol</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View className="flex-row items-center justify-center gap-1.5 my-1">
+          <Text className="text-gray-700">Bir hesabın var mı?</Text>
+          <Text
+            className="text-violet-800 font-medium"
+            onPress={handleLoginPage}
+          >
+            Giriş Yap
+          </Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
+
+export default RegisterScreen;
+
+const styles = StyleSheet.create({});
