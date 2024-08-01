@@ -1,18 +1,33 @@
 const express = require('express');
-const app = express();
 const http = require('http');
+const WebSocket = require('ws');
+
+const app = express();
 const server = http.createServer(app);
-const { Server } = require("socket.io");
-const io = new Server(server);
+const wss = new WebSocket.Server({ server });
 
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html');
+  res.send('WebSocket server is running');
 });
 
-io.on('connection', (socket) => {
-  console.log('a user connected');
+wss.on('connection', (ws) => {
+  console.log('Yeni bir istemci bağlandı');
+
+  ws.on('message', (message) => {
+    console.log('Gelen mesaj:', message);
+    ws.send(`Sunucu mesajı: ${message}`);
+  });
+
+  ws.on('close', () => {
+    console.log('Bir istemci bağlantısı kapandı');
+  });
+
+  ws.on('error', (error) => {
+    console.log('WebSocket hatası:', error);
+  });
 });
 
-server.listen(3000, () => {
-  console.log('listening on *:3000');
+const PORT = 3000;
+server.listen(PORT, () => {
+  console.log(`Sunucu ${PORT} portunda çalışıyor`);
 });

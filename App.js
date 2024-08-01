@@ -1,54 +1,94 @@
-import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { socket } from './socket';
+import React, { useEffect, useState, useRef } from 'react';
+import { SafeAreaView, Text, StyleSheet, TextInput, Button, View } from 'react-native';
 
-export default function App() {
-  const [isConnected, setIsConnected] = useState(false);
-  const [transport, setTransport] = useState('N/A');
+const App = () => {
+  const [message, setMessage] = useState("");
+  const [receivedMessage, setReceivedMessage] = useState("");
+  const ws = useRef(null);
 
   useEffect(() => {
-    if (socket.connected) {
-      onConnect();
-    }
+    ws.current = new WebSocket('ws://192.168.0.113:3000');
 
-    function onConnect() {
-      setIsConnected(true);
-      setTransport(socket.io.engine.transport.name);
+    ws.current.onopen = () => {
+      console.log('Bağlantı açıldı');
+    };
 
-      socket.io.engine.on('upgrade', (transport) => {
-        setTransport(transport.name);
-      });
-    }
+    ws.current.onmessage = e => {ı
+      console.log('Alınan mesaj:', e.data);
+      setReceivedMessage(e.data);
+    };
 
-    function onDisconnect() {
-      setIsConnected(false);
-      setTransport('N/A');
-    }
+    ws.current.onerror = e => {
+      console.log('Hata:', e.message);
+    };
 
-    socket.on('connect', onConnect);
-    socket.on('disconnect', onDisconnect);
+    ws.current.onclose = e => {
+      console.log('Bağlantı kapandı:', e.code, e.reason);
+    };
 
     return () => {
-      socket.off('connect', onConnect);
-      socket.off('disconnect', onDisconnect);
+      ws.current.close();
     };
   }, []);
 
+  const sendMessage = () => {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(message);
+    } else {
+      console.log('WebSocket bağlantısı açık değil');
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      <Text>Status: { isConnected ? 'connected' : 'disconnected' }</Text>
-      <Text>Transport: { transport }</Text>
-      <StatusBar style="auto" />
-    </View>
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.text}>WebSocket Bağlantısı</Text>
+      <TextInput
+        style={styles.input}
+        onChangeText={setMessage}
+        value={message}
+        placeholder="Mesajınızı yazın"
+      />
+      <Button title="Mesaj Gönder" onPress={sendMessage} />
+      <View style={styles.messageContainer}>
+        <Text style={styles.receivedText}>Alınan mesaj:</Text>
+        <Text style={styles.receivedMessage}>{receivedMessage}</Text>
+      </View>
+    </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5FCFF',
+  },
+  text: {
+    fontSize: 20,
+    textAlign: 'center',
+    margin: 10,
+  },
+  input: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    width: '80%',
+    paddingHorizontal: 10,
+    marginVertical: 20,
+  },
+  messageContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  receivedText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  receivedMessage: {
+    fontSize: 16,
+    marginTop: 10,
   },
 });
+
+export default App;

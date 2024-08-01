@@ -18,8 +18,7 @@
     "firebase": "^10.12.4",
     "nativewind": "^2.0.11",
     "react": "18.2.0",
-    "react-native": "0.74.3",
-    "socket.io-client": "^4.7.5"
+    "react-native": "0.74.3"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
