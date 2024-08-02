@@ -2,6 +2,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import Router from './src/routes/Router';
+import { apiConstant } from './constants/apiConstant';
 
 const App = () => {
   const [message, setMessage] = useState("");
@@ -9,7 +10,7 @@ const App = () => {
   const ws = useRef(null);
 
   useEffect(() => {
-    ws.current = new WebSocket("ws://192.168.1.207:3000");
+    ws.current = new WebSocket(`ws://${apiConstant.ip}`);
 
     ws.current.onopen = () => {
       console.log("Bağlantı açıldı");
