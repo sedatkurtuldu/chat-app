@@ -18,8 +18,18 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
-tokenRouter.get('/auth', async (req, res) => {
-  const token = req.query.token;
+// tokenRouter.get('/auth', async (req, res) => {
+//   const token = req.query.token;
+//   try {
+//     const decodedToken = await admin.auth().verifyIdToken(token);
+//     res.status(200).send("Kullanıcı kimliği doğrulandı");
+//   } catch (error) {
+//     res.status(401).send("Kullanıcı kimliği doğrulanamadı");
+//   }
+// });
+
+tokenRouter.post('/auth', async (req, res) => {
+  const token = req.body.token;
   try {
     const decodedToken = await admin.auth().verifyIdToken(token);
     res.status(200).send("Kullanıcı kimliği doğrulandı");

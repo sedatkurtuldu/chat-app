@@ -16,30 +16,32 @@ const LoginScreen = ({ navigation }) => {
       const savedToken = await AsyncStorage.getItem("userToken");
 
       if (savedToken) {
-        
-        fetch(`${apiConstant.apiUrlAsPcIp}/auth?token=${savedToken}`)
-        .then(async (response) => {
-          if (response.status === 200) {
-            navigation.navigate("HomeScreen");
-          } else {
+        fetch(`${apiConstant.apiUrlAsPcIp}/auth`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token: savedToken }),
+        })
+          .then(async (response) => {
+            if (response.status === 200) {
+              navigation.navigate("HomeScreen");
+            } else {
+              Alert.alert(
+                "Başarısız!",
+                "Giriş yaparken bir hata oluştu, lütfen tekrar deneyin.",
+                [{ text: "TAMAM" }]
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("Giriş yaparken bir hata oluştu: ", error.message);
             Alert.alert(
               "Başarısız!",
-              "Token geçersiz. Lütfen tekrar giriş yapın.",
+              "Giriş yaparken bir hata oluştu, lütfen tekrar deneyin.",
               [{ text: "TAMAM" }]
             );
-          }
-        })
-        .catch((error) => {
-          console.error(
-            "Token kontrolü sırasında bir hata oluştu: ",
-            error.message
-          );
-          Alert.alert(
-            "Başarısız!",
-            "Token kontrolü sırasında bir hata oluştu, lütfen tekrar deneyin.",
-            [{ text: "TAMAM" }]
-          );
-        });
+          });
       } else {
         if (email === "" || password === "") {
           Alert.alert("Başarısız!", "E-Posta ve Şifre alanı boş geçilemez.", [
@@ -53,30 +55,36 @@ const LoginScreen = ({ navigation }) => {
           email,
           password
         );
-        const token = await getIdToken(userCredential.user);
+        const token = await userCredential.user.getIdToken();
 
         await AsyncStorage.setItem("userToken", token);
 
-        fetch(`${apiConstant.apiUrlAsPcIp}/auth?token=${savedToken}`)
-        .then(async (response) => {
-          if (response.status === 200) {
-            navigation.navigate("HomeScreen");
-          } else {
-            Alert.alert(
-              "Başarısız!",
-              "Giriş yaparken bir hata oluştu, lütfen tekrar deneyin.",
-              [{ text: "TAMAM" }]
-            );
-          }
+        fetch(`${apiConstant.apiUrlAsPcIp}/auth`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token }),
         })
-        .catch((error) => {
-          console.error("Giriş yaparken bir hata oluştu: ", error.message);
+          .then(async (response) => {
+            if (response.status === 200) {
+              navigation.navigate("HomeScreen");
+            } else {
+              Alert.alert(
+                "Başarısız!",
+                "Giriş yaparken bir hata oluştu, lütfen tekrar deneyin.",
+                [{ text: "TAMAM" }]
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("Giriş yaparken bir hata oluştu: ", error.message);
             Alert.alert(
               "Başarısız!",
               "Giriş yaparken bir hata oluştu, lütfen tekrar deneyin.",
               [{ text: "TAMAM" }]
             );
-        });
+          });
       }
     } catch (error) {
       console.error("Giriş yaparken bir hata oluştu: ", error.message);
