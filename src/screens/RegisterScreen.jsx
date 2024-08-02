@@ -87,7 +87,6 @@ const RegisterScreen = ({ navigation }) => {
   
       const token = await getIdToken(user);
       await AsyncStorage.setItem('userToken', token);
-      navigation.navigate("HomeScreen");
   
     } catch (error) {
       console.error("Kullanıcı kaydı hatası: ", error);

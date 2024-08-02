@@ -1,27 +1,50 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, View, ActivityIndicator, Text } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import LoginScreen from "../screens/LoginScreen";
 import HomeScreen from "../screens/HomeScreen";
 import { auth } from "../../server/firebase";
 import RegisterScreen from "../screens/RegisterScreen";
+import ChatsHeaderRight from "../components/ChatsHeaderRight";
 
 const Stack = createNativeStackNavigator();
 
 const Router = () => {
   const [user, setUser] = useState(null);
+  const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
-    auth.onAuthStateChanged((user) => {
-      if (user) setUser(user);
-      else setUser(null);
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setUser(user);
+      if (initializing) setInitializing(false);
     });
-  }, []);
+
+    return unsubscribe;
+  }, [initializing]);
+
+  if (initializing) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
 
   return (
-    <Stack.Navigator>
+    <Stack.Navigator initialRouteName={user ? "HomeScreen" : "LoginScreen"}>
       {user ? (
-        <Stack.Screen name="HomeScreen" component={HomeScreen} />
+        <Stack.Screen
+          name="HomeScreen"
+          component={HomeScreen}
+          options={{
+            headerTitle: "Sohbetler",
+            headerShadowVisible: false,
+            headerLeft: () => "",
+            headerRight: () => <ChatsHeaderRight userId={user.uid} />,
+            headerStyle: { backgroundColor: "#8285f1" },
+            headerTitleStyle: { color: "#fff", fontSize: 28, fontWeight: "600" },
+          }}
+        />
       ) : (
         <>
           <Stack.Screen
@@ -41,5 +64,3 @@ const Router = () => {
 };
 
 export default Router;
-
-const styles = StyleSheet.create({});

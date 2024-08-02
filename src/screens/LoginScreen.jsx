@@ -25,6 +25,11 @@ const LoginScreen = ({ navigation }) => {
         })
           .then(async (response) => {
             if (response.status === 200) {
+              const userCredential = await signInWithEmailAndPassword(
+                auth,
+                email,
+                password
+              );
               navigation.navigate("HomeScreen");
             } else {
               Alert.alert(
@@ -50,15 +55,6 @@ const LoginScreen = ({ navigation }) => {
           return;
         }
 
-        const userCredential = await signInWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
-        const token = await userCredential.user.getIdToken();
-
-        await AsyncStorage.setItem("userToken", token);
-
         fetch(`${apiConstant.apiUrlAsPcIp}/auth`, {
           method: 'POST',
           headers: {
@@ -68,6 +64,15 @@ const LoginScreen = ({ navigation }) => {
         })
           .then(async (response) => {
             if (response.status === 200) {
+              const userCredential = await signInWithEmailAndPassword(
+                auth,
+                email,
+                password
+              );
+              const token = await userCredential.user.getIdToken();
+      
+              await AsyncStorage.setItem("userToken", token);
+              
               navigation.navigate("HomeScreen");
             } else {
               Alert.alert(

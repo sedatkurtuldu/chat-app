@@ -11,11 +11,12 @@ import { db } from "./firebase";
 const USER = "Users";
 
 export const getUser = async (userId) => {
-  const userDocRef = doc(db, USER, userId);
+  const userCollectionRef = collection(db, USER);
+  const userQuery = query(userCollectionRef, where("userId", "==", userId));
+  const querySnapshot = await getDocs(userQuery);
 
-  const docSnapshot = await getDoc(userDocRef);
-
-  if (docSnapshot.exists()) {
+  if (!querySnapshot.empty) {
+    const docSnapshot = querySnapshot.docs[0];
     const user = {
       id: docSnapshot.id,
       userId: docSnapshot.data().userId,
