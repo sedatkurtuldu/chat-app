@@ -12,13 +12,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import TextInputComponent from "../components/TextInputComponent";
 import * as ImagePicker from "expo-image-picker";
 import ImagePickerComponent from "../components/ImagePickerComponent";
-import "firebase/auth";
-import "firebase/firestore";
-import { auth, db } from "../../server/firebase";
-import { createUserWithEmailAndPassword, getIdToken } from "firebase/auth";
+import { auth, db, storage } from "../../server/firebase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { addDoc, collection } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { hashPassword } from "../../helpers/Helpers";
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const RegisterScreen = ({ navigation }) => {
   const [userName, setUserName] = useState("");
@@ -64,36 +62,44 @@ const RegisterScreen = ({ navigation }) => {
     }
   };
 
+  const uploadImage = async (uri) => {
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    const fileName = `${Date.now()}.jpg`;
+    const storageRef = ref(storage, `userImages/${fileName}`);
+    await uploadBytes(storageRef, blob);
+    const downloadURL = await getDownloadURL(storageRef);
+    return downloadURL;
+  };
+
   const registerUser = async () => {
     if (!userName || !email || !password || !image) {
       Alert.alert("Hata", "Lütfen tüm alanları doldurun.");
       return;
     }
-  
+
     try {
       const hashedPassword = await hashPassword(password);
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-  
+
+      const profileImageUrl = await uploadImage(image);
+
       await addDoc(collection(db, "Users"), {
         userId: user.uid,
         email: user.email,
         password: hashedPassword,
         displayName: userName,
-        profileImage: image,
+        profileImage: profileImageUrl,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
-  
-      const token = await getIdToken(user);
-      await AsyncStorage.setItem('userToken', token);
-  
+
     } catch (error) {
       console.error("Kullanıcı kaydı hatası: ", error);
       Alert.alert("Kayıt Hatası", "Kullanıcı kaydı sırasında bir hata oluştu.");
     }
   };
-
 
   return (
     <SafeAreaView className="flex-1 bg-white">

@@ -13,84 +13,45 @@ const LoginScreen = ({ navigation }) => {
 
   const handleLogin = async () => {
     try {
-      const savedToken = await AsyncStorage.getItem("userToken");
-
-      if (savedToken) {
-        fetch(`${apiConstant.apiUrlAsPcIp}/auth`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ token: savedToken }),
-        })
-          .then(async (response) => {
-            if (response.status === 200) {
-              const userCredential = await signInWithEmailAndPassword(
-                auth,
-                email,
-                password
-              );
-              navigation.navigate("HomeScreen");
-            } else {
-              Alert.alert(
-                "Başarısız!",
-                "Giriş yaparken bir hata oluştu, lütfen tekrar deneyin.",
-                [{ text: "TAMAM" }]
-              );
-            }
-          })
-          .catch((error) => {
-            console.error("Giriş yaparken bir hata oluştu: ", error.message);
-            Alert.alert(
-              "Başarısız!",
-              "Giriş yaparken bir hata oluştu, lütfen tekrar deneyin.",
-              [{ text: "TAMAM" }]
-            );
-          });
-      } else {
-        if (email === "" || password === "") {
-          Alert.alert("Başarısız!", "E-Posta ve Şifre alanı boş geçilemez.", [
-            { text: "TAMAM" },
-          ]);
-          return;
-        }
-
-        fetch(`${apiConstant.apiUrlAsPcIp}/auth`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ token }),
-        })
-          .then(async (response) => {
-            if (response.status === 200) {
-              const userCredential = await signInWithEmailAndPassword(
-                auth,
-                email,
-                password
-              );
-              const token = await userCredential.user.getIdToken();
-      
-              await AsyncStorage.setItem("userToken", token);
-              
-              navigation.navigate("HomeScreen");
-            } else {
-              Alert.alert(
-                "Başarısız!",
-                "Giriş yaparken bir hata oluştu, lütfen tekrar deneyin.",
-                [{ text: "TAMAM" }]
-              );
-            }
-          })
-          .catch((error) => {
-            console.error("Giriş yaparken bir hata oluştu: ", error.message);
-            Alert.alert(
-              "Başarısız!",
-              "Giriş yaparken bir hata oluştu, lütfen tekrar deneyin.",
-              [{ text: "TAMAM" }]
-            );
-          });
+      if (email === "" || password === "") {
+        Alert.alert("Başarısız!", "E-Posta ve Şifre alanı boş geçilemez.", [
+          { text: "TAMAM" },
+        ]);
+        return;
       }
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const token = await userCredential.user.getIdToken();
+
+      fetch(`${apiConstant.apiUrlAsPcIp}/auth`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ token }),
+      })
+        .then(async (response) => {
+          if (response.status === 200) {
+            navigation.navigate("HomeScreen");
+          } else {
+            Alert.alert(
+              "Başarısız!",
+              "Giriş yaparken bir hata oluştu, lütfen tekrar deneyin.",
+              [{ text: "TAMAM" }]
+            );
+          }
+        })
+        .catch((error) => {
+          console.error("Giriş yaparken bir hata oluştu: ", error.message);
+          Alert.alert(
+            "Başarısız!",
+            "Giriş yaparken bir hata oluştu, lütfen tekrar deneyin.",
+            [{ text: "TAMAM" }]
+          );
+        });
     } catch (error) {
       console.error("Giriş yaparken bir hata oluştu: ", error.message);
       Alert.alert(
