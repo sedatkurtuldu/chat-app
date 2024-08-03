@@ -3,7 +3,7 @@ import React from "react";
 
 const MessageListComponent = ({ item, navigation }) => {
     const navigateToChatRoom = () => {
-        navigation.navigate("ChatRoomScreen", { displayName: item.displayName, profileImage: item.profileImage })
+        navigation.navigate("ChatRoomScreen", { displayName: item.displayName, profileImage: item.profileImage, id: item.userId })
     }
   return (
     <TouchableOpacity onPress={navigateToChatRoom} activeOpacity={0.8} className="flex-row justify-between items-center p-3 border-b border-gray-200">
