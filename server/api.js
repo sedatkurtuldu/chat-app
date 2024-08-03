@@ -32,3 +32,27 @@ export const getUser = async (userId) => {
     return null;
   }
 };
+
+export const getAllUsersForChat = async (id) => {
+  const userCollectionRef = collection(db, USER);
+  const q = query(
+    userCollectionRef,where("userId", "!=", id)
+  );
+  const snapshot = await getDocs(q);
+
+  const getAllUsersForChat = snapshot.docs.map((doc) => {
+    const id = doc.id;
+    const user = doc.data();
+    return {
+      id: id,
+      userId: user.userId,
+      email: user.email,
+      password: user.password,
+      displayName: user.displayName,
+      profileImage: user.profileImage,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+  });
+  return getAllUsersForChat;
+};
