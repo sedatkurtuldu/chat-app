@@ -31,7 +31,7 @@ const [users, setUsers] = useState([])
   };
 
   const renderItem = ({ item }) => (
-    <MessageListComponent item={item} />
+    <MessageListComponent item={item} navigation={navigation}/>
   );
 
   return (
