@@ -6,6 +6,7 @@ import HomeScreen from "../screens/HomeScreen";
 import { auth } from "../../server/firebase";
 import RegisterScreen from "../screens/RegisterScreen";
 import ChatsHeaderRight from "../components/ChatsHeaderRight";
+import ChatRoomScreen from "../screens/ChatRoomScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -33,22 +34,25 @@ const Router = () => {
   return (
     <Stack.Navigator initialRouteName={user ? "HomeScreen" : "LoginScreen"}>
       {user ? (
-        <Stack.Screen
-          name="HomeScreen"
-          component={HomeScreen}
-          options={{
-            headerTitle: "Sohbetler",
-            headerShadowVisible: false,
-            headerLeft: () => "",
-            headerRight: () => <ChatsHeaderRight userId={user.uid} />,
-            headerStyle: { backgroundColor: "#8285f1" },
-            headerTitleStyle: {
-              color: "#fff",
-              fontSize: 28,
-              fontWeight: "600",
-            },
-          }}
-        />
+        <>
+          <Stack.Screen
+            name="HomeScreen"
+            component={HomeScreen}
+            options={{
+              headerTitle: "Sohbetler",
+              headerShadowVisible: false,
+              headerLeft: () => "",
+              headerRight: () => <ChatsHeaderRight userId={user.uid} />,
+              headerStyle: { backgroundColor: "#8285f1" },
+              headerTitleStyle: {
+                color: "#fff",
+                fontSize: 28,
+                fontWeight: "600",
+              },
+            }}
+          />
+          <Stack.Screen name="ChatRoomScreen" component={ChatRoomScreen} />
+        </>
       ) : (
         <>
           <Stack.Screen

@@ -1,9 +1,12 @@
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import React from "react";
 
-const MessageListComponent = ({ item }) => {
+const MessageListComponent = ({ item, navigation }) => {
+    const navigateToChatRoom = () => {
+        navigation.navigate("ChatRoomScreen", { displayName: item.displayName, profileImage: item.profileImage })
+    }
   return (
-    <TouchableOpacity activeOpacity={0.8} className="flex-row justify-between items-center p-3 border-b border-gray-200">
+    <TouchableOpacity onPress={navigateToChatRoom} activeOpacity={0.8} className="flex-row justify-between items-center p-3 border-b border-gray-200">
       <View className="flex-row">
         <View className="items-center">
           <Image
