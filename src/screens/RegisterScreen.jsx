@@ -54,11 +54,6 @@ const RegisterScreen = ({ navigation }) => {
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
       setImage(result.assets[0].uri);
-    } else {
-      Alert.alert(
-        "Resim Seçimi İptal Edildi",
-        "Resim seçimi iptal edildi veya herhangi bir resim seçilmedi."
-      );
     }
   };
 

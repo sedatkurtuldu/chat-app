@@ -56,17 +56,6 @@ const HomeScreen = ({ navigation }) => {
   
     fetchUsers();
   }, []);
-  
-
-  const logOut = () => {
-    auth.signOut()
-      .then(() => {
-        navigation.navigate("LoginScreen");
-      })
-      .catch((error) => {
-        console.error("Çıkış yaparken hata oluştu: ", error);
-      });
-  };
 
   const renderItem = ({ item }) => (
     <MessageListComponent item={item} navigation={navigation} />
@@ -79,9 +68,6 @@ const HomeScreen = ({ navigation }) => {
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
       />
-      <TouchableOpacity onPress={logOut}>
-        <Text>Çıkış Yap</Text>
-      </TouchableOpacity>
     </View>
   );
 };

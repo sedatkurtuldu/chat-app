@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, View, ActivityIndicator, Text } from "react-native";
+import {
+  StyleSheet,
+  View,
+  ActivityIndicator,
+  Text,
+  TouchableOpacity,
+} from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import LoginScreen from "../screens/LoginScreen";
 import HomeScreen from "../screens/HomeScreen";
@@ -7,6 +13,7 @@ import { auth } from "../../server/firebase";
 import RegisterScreen from "../screens/RegisterScreen";
 import ChatsHeaderRight from "../components/ChatsHeaderRight";
 import ChatRoomScreen from "../screens/ChatRoomScreen";
+import ProfileScreen from "../screens/ProfileScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -31,6 +38,10 @@ const Router = () => {
     );
   }
 
+  const logOut = () => {
+    auth.signOut()
+  };
+
   return (
     <Stack.Navigator initialRouteName={user ? "HomeScreen" : "LoginScreen"}>
       {user ? (
@@ -38,20 +49,41 @@ const Router = () => {
           <Stack.Screen
             name="HomeScreen"
             component={HomeScreen}
-            options={{
+            options={({ navigation }) => ({
               headerTitle: "Sohbetler",
               headerShadowVisible: false,
               headerLeft: () => "",
-              headerRight: () => <ChatsHeaderRight userId={user.uid} />,
+              headerRight: () => (
+                <ChatsHeaderRight userId={user.uid} navigation={navigation} />
+              ),
               headerStyle: { backgroundColor: "#8285f1" },
               headerTitleStyle: {
                 color: "#fff",
                 fontSize: 28,
                 fontWeight: "600",
               },
-            }}
+            })}
           />
           <Stack.Screen name="ChatRoomScreen" component={ChatRoomScreen} />
+          <Stack.Screen
+            name="ProfileScreen"
+            component={ProfileScreen}
+            options={({ navigation }) => ({
+              headerTitle: "",
+              headerShadowVisible: false,
+              headerRight: () => (
+                <TouchableOpacity
+                style={{ backgroundColor: "#6d28d9", padding: 8, borderRadius: 10 }}
+                  activeOpacity={0.8}
+                  onPress={logOut}
+                >
+                  <Text style={{ color: "white" }}>
+                    Çıkış Yap
+                  </Text>
+                </TouchableOpacity>
+              ),
+            })}
+          />
         </>
       ) : (
         <>
