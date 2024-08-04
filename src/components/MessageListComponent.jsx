@@ -4,10 +4,18 @@ import moment from "moment";
 
 const MessageListComponent = ({ item, navigation }) => {
   const navigateToChatRoom = () => {
-    navigation.navigate("ChatRoomScreen", { displayName: item.displayName, profileImage: item.profileImage, id: item.userId })
-  }
+    navigation.navigate("ChatRoomScreen", {
+      displayName: item.displayName,
+      profileImage: item.profileImage,
+      id: item.userId,
+    });
+  };
   return (
-    <TouchableOpacity onPress={navigateToChatRoom} activeOpacity={0.8} className="flex-row justify-between items-center p-3 border-b border-gray-200">
+    <TouchableOpacity
+      onPress={navigateToChatRoom}
+      activeOpacity={0.8}
+      className="flex-row justify-between items-center p-3 border-b border-gray-200"
+    >
       <View className="flex-row">
         <View className="items-center">
           <Image
@@ -26,7 +34,9 @@ const MessageListComponent = ({ item, navigation }) => {
       </View>
       <View className="items-end justify-center">
         {item.lastMessage && (
-          <Text className="text-gray-400">{moment(item.lastMessage.SendTime).format("HH:mm")}</Text>
+          <Text className="text-gray-400">
+            {moment(item.lastMessage.SendTime).format("HH:mm")}
+          </Text>
         )}
       </View>
     </TouchableOpacity>
