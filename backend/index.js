@@ -48,7 +48,7 @@ let clients = {};
 wss.on("connection", (ws, req) => {
   const client = req.headers["sec-websocket-key"];
   clients[client] = ws;
-  send("Uygulamaya Hoşgeldiniz", client);
+  //send("Uygulamaya Hoşgeldiniz", client);
   ws.on("message", (msg) => receive(msg, client));
   ws.on("close", (code, reason) =>
     console.log("Closed: ", client, code, reason)

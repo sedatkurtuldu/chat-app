@@ -18,7 +18,7 @@ const HomeScreen = ({ navigation }) => {
         const usersList = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
-          lastMessage: null
+          lastMessage: null,
         }));
   
         setUsers(usersList);
@@ -36,10 +36,17 @@ const HomeScreen = ({ navigation }) => {
   
             const sortedMessages = messages.sort((a, b) => a.SendTime - b.SendTime);
             const latestMessage = sortedMessages[sortedMessages.length - 1];
+            const statusOneCount = messages.filter(message => message.Status === 1).length;
+            const receiverUserId = latestMessage?.ReceiverUserId;
   
             setUsers(prevUsers => {
               return prevUsers.map(u => 
-                u.id === user.id ? { ...u, lastMessage: latestMessage } : u
+                u.id === user.id ? { 
+                  ...u, 
+                  lastMessage: latestMessage, 
+                  read: statusOneCount, 
+                  ...(receiverUserId && { receiverUserId: receiverUserId }) 
+                } : u
               );
             });
           });
