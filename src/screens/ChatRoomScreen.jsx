@@ -16,11 +16,11 @@ import { auth, db } from "../../server/firebase";
 import {
   addDoc,
   collection,
-  query,
-  orderBy,
   onSnapshot,
 } from "firebase/firestore";
 import * as ImagePicker from "expo-image-picker";
+import { apiConstant } from "../../constants/apiConstant";
+import { getMessagesQuery } from "../../server/api";
 
 const ChatRoomScreen = ({ route, navigation }) => {
   const { id, displayName, profileImage } = route.params;
@@ -30,24 +30,28 @@ const ChatRoomScreen = ({ route, navigation }) => {
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
-    startWebSocket();
-
-    const messagesRef = collection(db, "Messages");
-    const q = query(messagesRef, orderBy("SendTime"));
+    const q = getMessagesQuery(auth.currentUser.uid, id);
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const fetchedMessages = snapshot.docs.map((doc) => doc.data());
       setMessages(fetchedMessages);
     });
 
+    return () => unsubscribe();
+  }, [id]);
+
+  useEffect(() => {
+    startWebSocket();
+
     return () => {
-      ws.current?.close();
-      unsubscribe();
+      if (ws.current) {
+        ws.current.close();
+      }
     };
   }, []);
 
   const startWebSocket = () => {
     console.log("WebSocket started.");
-    ws.current = new WebSocket(`ws://yourdomain:8080`);
+    ws.current = new WebSocket(`ws://${apiConstant.ip}`);
     ws.current.onmessage = (e) => {
       console.log(`Received: ${e.data}`);
       const msg = JSON.parse(e.data);
@@ -62,8 +66,8 @@ const ChatRoomScreen = ({ route, navigation }) => {
     };
   };
 
-  const handleReceive = (receivedMsg) => {
-    addDoc(collection(db, "Messages"), receivedMsg)
+  const handleReceive = async (receivedMsg) => {
+    await addDoc(collection(db, "Messages"), receivedMsg)
       .then(() => {
         setMessages((prevMessages) => {
           if (
@@ -99,7 +103,13 @@ const ChatRoomScreen = ({ route, navigation }) => {
 
     try {
       await addDoc(collection(db, "Messages"), newMessage);
-      ws.current.send(JSON.stringify(newMessage));
+
+      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+        ws.current.send(JSON.stringify(newMessage));
+      } else {
+        console.log("WebSocket is not open. Cannot send message.");
+      }
+
       setMessage("");
     } catch (error) {
       console.error("Mesaj gönderme hatası: ", error);
@@ -125,7 +135,13 @@ const ChatRoomScreen = ({ route, navigation }) => {
 
       try {
         await addDoc(collection(db, "Messages"), imgMsg);
-        ws.current.send(JSON.stringify(imgMsg));
+
+        if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+          ws.current.send(JSON.stringify(imgMsg));
+        } else {
+          console.log("WebSocket is not open. Cannot send image.");
+        }
+
         setMessages((prevMessages) =>
           [...prevMessages, imgMsg].sort(
             (a, b) => new Date(a.SendTime) - new Date(b.SendTime)

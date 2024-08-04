@@ -5,6 +5,7 @@ import {
   query,
   doc,
   getDoc,
+  orderBy,
 } from "firebase/firestore";
 import { db } from "./firebase";
 
@@ -57,54 +58,12 @@ export const getAllUsersForChat = async (id) => {
   return getAllUsersForChat;
 };
 
-const MESSAGES = "Messages";
-
-export const getMessagesBySenderId = async (id) => {
-  const getMessagesCollection = collection(db, MESSAGES);
-  const q = query(
-    getMessagesCollection,
-    where("SenderUserId", "==", id),
-    where("Status", "==", 1)
+export const getMessagesQuery = (currentUserId, chatPartnerId) => {
+  const messagesRef = collection(db, "Messages");
+  return query(
+    messagesRef,
+    where("ReceiverUserId", "in", [chatPartnerId, currentUserId]),
+    where("SenderUserId", "in", [chatPartnerId, currentUserId]),
+    orderBy("SendTime")
   );
-  const snapshot = await getDocs(q);
-
-  // Renamed variable to avoid conflict
-  const messagesBySender = snapshot.docs.map((doc) => {
-    const docId = doc.id;
-    const messageData = doc.data();
-    return {
-      id: docId,
-      Message: messageData.Message,
-      ReceiverUserId: messageData.ReceiverUserId,
-      SendTime: messageData.SendTime,
-      SenderUserId: messageData.SenderUserId,
-      Status: messageData.Status,
-    };
-  });
-  return messagesBySender;
-};
-
-export const getMessagesByReceiverId = async (id) => {
-  const getMessagesCollection = collection(db, MESSAGES);
-  const q = query(
-    getMessagesCollection,
-    where("ReceiverUserId", "==", id),
-    where("Status", "==", 1)
-  );
-  const snapshot = await getDocs(q);
-
-  // Renamed variable to avoid conflict
-  const messagesByReceiver = snapshot.docs.map((doc) => {
-    const docId = doc.id;
-    const messageData = doc.data();
-    return {
-      id: docId,
-      Message: messageData.Message,
-      ReceiverUserId: messageData.ReceiverUserId,
-      SendTime: messageData.SendTime,
-      SenderUserId: messageData.SenderUserId,
-      Status: messageData.Status,
-    };
-  });
-  return messagesByReceiver;
 };
