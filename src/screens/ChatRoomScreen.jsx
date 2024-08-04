@@ -17,6 +17,7 @@ import {
   addDoc,
   collection,
   onSnapshot,
+  updateDoc,
 } from "firebase/firestore";
 import * as ImagePicker from "expo-image-picker";
 import { apiConstant } from "../../constants/apiConstant";
@@ -29,13 +30,21 @@ const ChatRoomScreen = ({ route, navigation }) => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
 
+  //STATUS 1 OKUNMADI STATUS 2 OKUNDU
   useEffect(() => {
     const q = getMessagesQuery(auth.currentUser.uid, id);
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedMessages = snapshot.docs.map((doc) => doc.data());
+      const fetchedMessages = snapshot.docs.map((doc) => ({ ...doc.data(), ref: doc.ref }));
+  
+      fetchedMessages.forEach(async (item) => {
+        if (item.ReceiverUserId === auth.currentUser.uid) {
+          await updateDoc(item.ref, { Status: 2 });
+        }
+      });
+  
       setMessages(fetchedMessages);
     });
-
+  
     return () => unsubscribe();
   }, [id]);
 

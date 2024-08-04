@@ -1,6 +1,7 @@
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import React from "react";
 import moment from "moment";
+import { auth } from "../../server/firebase";
 
 const MessageListComponent = ({ item, navigation }) => {
   const navigateToChatRoom = () => {
@@ -10,6 +11,7 @@ const MessageListComponent = ({ item, navigation }) => {
       id: item.userId,
     });
   };
+
   return (
     <TouchableOpacity
       onPress={navigateToChatRoom}
@@ -27,8 +29,10 @@ const MessageListComponent = ({ item, navigation }) => {
         </View>
         <View className="justify-center ml-4">
           <Text className="text-lg font-bold">{item.displayName}</Text>
-          {item.lastMessage && (
+          {item.lastMessage ? (
             <Text className="text-gray-600">{item.lastMessage.Message}</Text>
+          ) : (
+            <Text className="text-gray-600"> Hi👋 I'm using Akko!</Text>
           )}
         </View>
       </View>
@@ -37,6 +41,11 @@ const MessageListComponent = ({ item, navigation }) => {
           <Text className="text-gray-400">
             {moment(item.lastMessage.SendTime).format("HH:mm")}
           </Text>
+        )}
+        {item.read > 0 && item.receiverUserId === auth.currentUser.uid && (
+          <View className="bg-violet-600 rounded-full w-7 h-7 justify-center items-center mt-1.5">
+            <Text className="text-white font-bold">{item.read}</Text>
+          </View>
         )}
       </View>
     </TouchableOpacity>
