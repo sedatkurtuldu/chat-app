@@ -6,6 +6,7 @@ import {
   doc,
   getDoc,
   orderBy,
+  limit,
 } from "firebase/firestore";
 import { db } from "./firebase";
 
@@ -58,8 +59,16 @@ export const getAllUsersForChat = async (id) => {
   return getAllUsersForChat;
 };
 
+
+export const getUsersQuery = (userId) => {
+  const userCollectionRef = collection(db, USER);
+  return query(userCollectionRef, where('userId', '!=', userId));
+}
+
+const MESSAGES = "Messages";
+
 export const getMessagesQuery = (currentUserId, chatPartnerId) => {
-  const messagesRef = collection(db, "Messages");
+  const messagesRef = collection(db, MESSAGES);
   return query(
     messagesRef,
     where("ReceiverUserId", "in", [chatPartnerId, currentUserId]),

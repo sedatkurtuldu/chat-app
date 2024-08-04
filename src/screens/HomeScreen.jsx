@@ -1,32 +1,62 @@
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { auth, db } from '../../server/firebase';
-import { getAllUsersForChat } from '../../server/api';
+import { auth } from '../../server/firebase';
+import { getMessagesQuery, getUsersQuery } from '../../server/api';
 import MessageListComponent from '../components/MessageListComponent';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { onSnapshot } from 'firebase/firestore';
 
 const HomeScreen = ({ navigation }) => {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    const userCollectionRef = collection(db, 'Users');
-    const q = query(userCollectionRef, where('userId', '!=', auth.currentUser.uid));
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const usersList = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setUsers(usersList);
-    });
-
-    return () => unsubscribe();
+    const unsubscribers = new Map();
+  
+    const fetchUsers = async () => {
+      const q = getUsersQuery(auth.currentUser.uid);
+  
+      const unsubscribeFromUsers = onSnapshot(q, (snapshot) => {
+        const usersList = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          lastMessage: null
+        }));
+  
+        setUsers(usersList);
+  
+        unsubscribers.forEach(unsub => unsub());
+  
+        usersList.forEach(user => {
+          const q2 = getMessagesQuery(auth.currentUser.uid, user.userId);
+  
+          const unsubscribeFromMessages = onSnapshot(q2, (snapshot) => {
+            const messages = snapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data(),
+            }));
+  
+            const sortedMessages = messages.sort((a, b) => a.SendTime - b.SendTime);
+            const latestMessage = sortedMessages[sortedMessages.length - 1];
+  
+            setUsers(prevUsers => {
+              return prevUsers.map(u => 
+                u.id === user.id ? { ...u, lastMessage: latestMessage } : u
+              );
+            });
+          });
+  
+          unsubscribers.set(user.userId, unsubscribeFromMessages);
+        });
+      });
+  
+      return () => {
+        unsubscribeFromUsers();
+        unsubscribers.forEach(unsub => unsub());
+      };
+    };
+  
+    fetchUsers();
   }, []);
-
-  const getAllUsers = async () => {
-    const users = await getAllUsersForChat(auth.currentUser.uid);
-    setUsers(users);
-  };
+  
 
   const logOut = () => {
     auth.signOut()
