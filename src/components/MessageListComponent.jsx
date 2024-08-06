@@ -2,6 +2,7 @@ import { Image, Text, TouchableOpacity, View } from "react-native";
 import React from "react";
 import moment from "moment";
 import { auth } from "../../server/firebase";
+import AntDesign from '@expo/vector-icons/AntDesign';
 
 const MessageListComponent = ({ item, navigation }) => {
   const navigateToChatRoom = () => {
@@ -30,7 +31,15 @@ const MessageListComponent = ({ item, navigation }) => {
         <View className="justify-center ml-4">
           <Text className="text-lg font-bold">{item.displayName}</Text>
           {item.lastMessage ? (
-            <Text className="text-gray-600">{item.lastMessage.Message}</Text>
+            item.lastMessage.ImageUrl ? (
+              <View className="flex-row items-center gap-1.5">
+                <AntDesign name="camera" size={18} color="darkgrey" />
+                <Text>Fotoğraf</Text>
+              </View>
+              
+            ) : (
+              <Text className="text-gray-600">{item.lastMessage.Message}</Text>
+            )
           ) : (
             <Text className="text-gray-600"> Hi👋 I'm using Akko!</Text>
           )}

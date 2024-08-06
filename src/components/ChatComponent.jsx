@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, Image } from "react-native";
 import React from "react";
 import moment from "moment";
 
@@ -13,9 +13,18 @@ const ChatComponent = ({ item, currentUser }) => {
         width: "75%",
         backgroundColor: isSender ? "white" : "#e6e6fa",
         alignSelf: isSender ? "flex-end" : "flex-start",
+        height: item.ImageUrl ? 240 : 'auto',
+        
       }}
     >
-      <Text style={{ fontSize: 16, textAlign: "left" }}>{item.Message}</Text>
+      {item.ImageUrl ? (
+        <Image
+          source={{ uri: item.ImageUrl }}
+          style={{ width: 290, height: 200, borderRadius: 10 }}
+        />
+      ) : (
+        <Text style={{ fontSize: 16, textAlign: "left" }}>{item.Message}</Text>
+      )}
       <Text
         style={{
           fontSize: 12,
@@ -26,9 +35,7 @@ const ChatComponent = ({ item, currentUser }) => {
           right: 5,
         }}
       >
-        {item.SendTime
-          ? moment(item.SendTime).format("HH:mm")
-          : ""}
+        {item.SendTime ? moment(item.SendTime).format("HH:mm") : ""}
       </Text>
     </View>
   );
