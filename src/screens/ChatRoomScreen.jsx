@@ -8,7 +8,7 @@ import {
   View,
   Alert,
 } from "react-native";
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import ChatComponent from "../components/ChatComponent";
@@ -18,6 +18,7 @@ import * as ImagePicker from "expo-image-picker";
 import { apiConstant } from "../../constants/apiConstant";
 import { getMessagesQuery } from "../../server/api";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { debounce } from "lodash";
 
 const ChatRoomScreen = ({ route, navigation }) => {
   const { id, displayName, profileImage } = route.params;
@@ -25,7 +26,6 @@ const ChatRoomScreen = ({ route, navigation }) => {
   const ws = useRef(null);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
-  const [image, setImage] = useState(null);
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
@@ -97,7 +97,7 @@ const ChatRoomScreen = ({ route, navigation }) => {
     ws.current.onmessage = (e) => {
       console.log(`Received: ${e.data}`);
       const msg = JSON.parse(e.data);
-      handleReceive(msg);
+      // handleReceive(msg);
     };
     ws.current.onclose = (e) => {
       console.log("Reconnecting: ", e.message);
@@ -108,30 +108,31 @@ const ChatRoomScreen = ({ route, navigation }) => {
     };
   };
 
-  const handleReceive = async (receivedMsg) => {
-    await addDoc(collection(db, "Messages"), receivedMsg)
-      .then(() => {
-        setMessages((prevMessages) => {
-          if (
-            !prevMessages.find(
-              (msg) =>
-                msg.SendTime === receivedMsg.SendTime &&
-                msg.Message === receivedMsg.Message
-            )
-          ) {
-            return [...prevMessages, receivedMsg].sort(
-              (a, b) => new Date(a.SendTime) - new Date(b.SendTime)
-            );
-          }
-          return prevMessages;
-        });
-      })
-      .catch((error) => {
-        console.error("Error adding document: ", error);
-      });
-  };
+  // const handleReceive = async (receivedMsg) => {
+  //   console.log("ReceivedMessage: ", receivedMsg)
+  //   await addDoc(collection(db, "Messages"), receivedMsg)
+  //     .then(() => {
+  //       setMessages((prevMessages) => {
+  //         if (
+  //           !prevMessages.find(
+  //             (msg) =>
+  //               msg.SendTime === receivedMsg.SendTime &&
+  //               msg.Message === receivedMsg.Message
+  //           )
+  //         ) {
+  //           return [...prevMessages, receivedMsg].sort(
+  //             (a, b) => new Date(a.SendTime) - new Date(b.SendTime)
+  //           );
+  //         }
+  //         return prevMessages;
+  //       });
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error adding document: ", error);
+  //     });
+  // };
 
-  const handleSend = async () => {
+  const debouncedHandleSend = useCallback(debounce(async () => {
     if (message.trim() === "") return;
 
     const currentUser = auth.currentUser.uid;
@@ -156,85 +157,65 @@ const ChatRoomScreen = ({ route, navigation }) => {
     } catch (error) {
       console.error("Mesaj gönderme hatası: ", error);
     }
+  }, 300), [message, id]);
+
+  const handleSend = () => {
+    debouncedHandleSend();
   };
 
-  const askForPermissions = async () => {
-    const { status: cameraStatus } =
-      await ImagePicker.requestCameraPermissionsAsync();
-    const { status: galleryStatus } =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (cameraStatus !== "granted" || galleryStatus !== "granted") {
-      Alert.alert(
-        "İzin Gerekli",
-        "Üzgünüz, bu işlemi gerçekleştirebilmek için kamera ve galeri izinlerine ihtiyacımız var!"
-      );
-    }
-  };
-
-  const pickImage = async () => {
-    await askForPermissions();
-  
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-  
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      return result.assets[0].uri;
-    }
-    return null;
-  };
-  
-  const uploadImage = async (uri) => {
+  // Debounce handlePickAndSendImage function
+  const debouncedHandlePickAndSendImage = useCallback(debounce(async () => {
     try {
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      const fileName = `${Date.now()}.jpg`;
-      const storage = getStorage();
-      const storageRef = ref(storage, `uploadImages/${fileName}`);
-      await uploadBytes(storageRef, blob);
-      const downloadURL = await getDownloadURL(storageRef);
-      return downloadURL;
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      throw error;
-    }
-  };
+      console.log("Requesting image picker...");
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.3,
+      });
+      console.log("Image picker result:", result);
   
-  const handlePickAndSendImage = async () => {
-    const uri = await pickImage();
-    if (uri) {
-      setImage(uri);
-      try {
-        const downloadURL = await uploadImage(uri);
-        const imgMsg = {
-          ReceiverUserId: id,
-          SenderUserId: auth.currentUser.uid,
-          ImageUrl: downloadURL,
-          SendTime: new Date().toISOString(),
-          Status: 1,
-        };
+      if (!result.canceled) {
+        const imageUri = result.assets[0].uri;
+        console.log("Image selected, uploading to Firebase Storage...");
   
-        await addDoc(collection(db, "Messages"), imgMsg);
+        const response = await fetch(imageUri);
+        const blob = await response.blob();
+        const uniqueName = `uploadImages/${Date.now()}.jpg`;
   
-        if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-          ws.current.send(JSON.stringify(imgMsg));
-        } else {
-          console.log("WebSocket is not open. Cannot send image.");
-        }
+        const storage = getStorage();
+        const storageRef = ref(storage, uniqueName);
   
-        setMessages((prevMessages) => [...prevMessages, imgMsg].sort((a, b) => new Date(a.SendTime) - new Date(b.SendTime)));
-        setImage(null);
-      } catch (error) {
-        console.error("Error uploading and sending image:", error);
+        await uploadBytes(storageRef, blob).then(async (snapshot) => {
+          console.log("Image uploaded to Firebase Storage:", snapshot);
+  
+          const downloadURL = await getDownloadURL(storageRef);
+          console.log("Download URL:", downloadURL);
+  
+          const imgMsg = {
+            ReceiverUserId: id,
+            SenderUserId: auth.currentUser.uid,
+            Message: "",
+            ImageUrl: downloadURL,
+            SendTime: new Date().toISOString(),
+            Status: 1,
+          };
+  
+          console.log("Adding document to Firestore...");
+          await addDoc(collection(db, "Messages"), imgMsg).then(() => {
+            console.log("Document added to Firestore");
+            setMessages((prevMessages) => [...prevMessages, imgMsg]);
+          });
+        });
       }
+    } catch (error) {
+      console.error("Error handling image picker:", error);
     }
+  }, 300), [id]);
+
+  const handlePickAndSendImage = () => {
+    debouncedHandlePickAndSendImage();
   };
-  
-  
 
   return (
     <View className="flex-1">
