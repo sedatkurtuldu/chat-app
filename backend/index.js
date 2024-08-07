@@ -58,15 +58,21 @@ wss.on("connection", (ws, req) => {
 const send = (msg, client) => {
   const socket = clients[client];
   if (socket) {
-    socket.send(msg, (error) => {
-      if (error) {
-        delete clients[client];
-      } else {
-        console.log(`Sent: ${msg}, to ${client}`);
-      }
-    });
+    try {
+      const message = typeof msg === 'string' ? msg : JSON.stringify(msg);
+      socket.send(message, (error) => {
+        if (error) {
+          delete clients[client];
+        } else {
+          console.log(`Sent: ${message}, to ${client}`);
+        }
+      });
+    } catch (error) {
+      console.error("Error sending message: ", error);
+    }
   }
 };
+
 
 const receive = (msg, sender) => {
   console.log(`Received: ${msg}, from ${sender}`);
