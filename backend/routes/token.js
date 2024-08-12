@@ -1,20 +1,16 @@
-const express = require('express');
-const jwt = require('jsonwebtoken');
+const express = require("express");
+const { admin } = require("../firebase");
+
 const router = express.Router();
-const JWT_SECRET = 'PAZSnm1WxR6SZvX';
 
-router.get('/createToken', (req, res) => {
-  const { userId, email } = req.query;
-
-  if (!userId || !email) {
-    return res.status(400).json({ error: 'userId and email are required' });
+router.post("/auth", async (req, res) => {
+  const token = req.body.token;
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    res.status(200).send("Kullanıcı kimliği doğrulandı");
+  } catch (error) {
+    res.status(401).send("Kullanıcı kimliği doğrulanamadı");
   }
-
-  const payload = { userId, email };
-  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
-
-  console.log("Token: ", token);
-  res.json({ token });
 });
 
 module.exports = router;
