@@ -2,89 +2,71 @@ const express = require("express");
 const http = require("http");
 const WebSocket = require("ws");
 const cors = require("cors");
-const admin = require("firebase-admin");
 
 const app = express();
 const server = http.createServer(app);
-const tokenRouter = express.Router();
+
+const tokenRouter = require("./routes/token");
+const messagesRouter = require("./routes/messages");
 
 app.use(express.json());
 app.use(cors());
 
-const serviceAccount = require("./chat-app-95ba0-firebase-adminsdk-ljugr-60a4dd23b9.json");
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
-
-// tokenRouter.get('/auth', async (req, res) => {
-//   const token = req.query.token;
-//   try {
-//     const decodedToken = await admin.auth().verifyIdToken(token);
-//     res.status(200).send("Kullanıcı kimliği doğrulandı");
-//   } catch (error) {
-//     res.status(401).send("Kullanıcı kimliği doğrulanamadı");
-//   }
-// });
-
-tokenRouter.post("/auth", async (req, res) => {
-  const token = req.body.token;
-  try {
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    res.status(200).send("Kullanıcı kimliği doğrulandı");
-  } catch (error) {
-    res.status(401).send("Kullanıcı kimliği doğrulanamadı");
-  }
-});
-
 app.use("/api", tokenRouter);
+app.use("/api", messagesRouter);
 
 const wss = new WebSocket.Server({ server: server }, () => {
-  console.log("Server started...");
+  console.log("WebSocket server started...");
 });
-const delay = 1000;
+
 let clients = {};
 
 wss.on("connection", (ws, req) => {
-  const client = req.headers["sec-websocket-key"];
-  clients[client] = ws;
-  //send("Uygulamaya Hoşgeldiniz", client);
-  ws.on("message", (msg) => receive(msg, client));
-  ws.on("close", (code, reason) =>
-    console.log("Closed: ", client, code, reason)
-  );
+  const clientId = req.headers["sec-websocket-key"];
+  clients[clientId] = ws;
+
+  ws.on("message", (msg) => handleMessage(msg, clientId));
+
+  ws.on("close", (code, reason) => {
+    console.log("Connection closed: ", clientId, code, reason);
+    delete clients[clientId];
+  });
+
+  ws.on("error", (error) => {
+    console.error("WebSocket error: ", error);
+  });
 });
 
-const send = (msg, client) => {
-  const socket = clients[client];
-  if (socket) {
+const handleMessage = (msg, clientId) => {
+  console.log(`Received message: ${msg}, from client ${clientId}`);
+  setTimeout(() => broadcast(msg, clientId), 1000);
+};
+
+const broadcast = (msg, senderId) => {
+  Object.keys(clients).forEach((clientId) => {
+    if (clientId !== senderId) {
+      sendMessage(msg, clientId);
+    }
+  });
+};
+
+const sendMessage = (msg, clientId) => {
+  const clientSocket = clients[clientId];
+  if (clientSocket) {
     try {
       const message = typeof msg === 'string' ? msg : JSON.stringify(msg);
-      socket.send(message, (error) => {
+      clientSocket.send(message, (error) => {
         if (error) {
-          delete clients[client];
+          console.error(`Failed to send message to client ${clientId}: ${error}`);
+          delete clients[clientId];
         } else {
-          console.log(`Sent: ${message}, to ${client}`);
+          console.log(`Sent message to client ${clientId}: ${message}`);
         }
       });
     } catch (error) {
       console.error("Error sending message: ", error);
     }
   }
-};
-
-
-const receive = (msg, sender) => {
-  console.log(`Received: ${msg}, from ${sender}`);
-  setTimeout(() => broadcast(msg, sender), delay);
-};
-
-const broadcast = (msg, sender) => {
-  Object.keys(clients).forEach((client) => {
-    if (client !== sender) {
-      send(msg, client);
-    }
-  });
 };
 
 const PORT = 3000;
