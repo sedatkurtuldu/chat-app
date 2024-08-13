@@ -13,6 +13,7 @@ import { FAB } from "react-native-paper";
 const HomeScreen = ({ navigation }) => {
   const [users, setUsers] = useState([]);
   const [groups, setGroups] = useState([]);
+  const usersAndGroups = [...groups, ...users];
 
   useEffect(() => {
     const unsubscribers = new Map();
@@ -103,7 +104,7 @@ const HomeScreen = ({ navigation }) => {
   return (
     <View className="flex-1 bg-white">
       <FlatList
-        data={[...groups, ...users]}
+        data={usersAndGroups}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
       />
