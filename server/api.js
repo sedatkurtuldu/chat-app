@@ -10,10 +10,10 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 
-const USER = "Users";
+const USERS = "Users";
 
 export const getUser = async (userId) => {
-  const userCollectionRef = collection(db, USER);
+  const userCollectionRef = collection(db, USERS);
   const userQuery = query(userCollectionRef, where("userId", "==", userId));
   const querySnapshot = await getDocs(userQuery);
 
@@ -36,7 +36,7 @@ export const getUser = async (userId) => {
 };
 
 export const getAllUsersForChat = async (id) => {
-  const userCollectionRef = collection(db, USER);
+  const userCollectionRef = collection(db, USERS);
   const q = query(
     userCollectionRef,where("userId", "!=", id)
   );
@@ -59,9 +59,35 @@ export const getAllUsersForChat = async (id) => {
   return getAllUsersForChat;
 };
 
+export const getUserDisplayNames = async () => {
+  try {
+    const userCollection = collection(db, USERS);
+    const userSnapshot = await getDocs(userCollection);
+
+    if (userSnapshot.empty) {
+      console.log("No matching documents.");
+      return {};
+    }
+
+    const userNames = {};
+
+    userSnapshot.forEach((doc) => {
+      const userData = doc.data();
+      const userId = userData.userId;
+      if (userId && userData.displayName) {
+        userNames[userId] = userData.displayName;
+      }
+    });
+
+    return userNames;
+  } catch (error) {
+    console.error("Error fetching user display names:", error);
+    throw error;
+  }
+};
 
 export const getUsersQuery = (userId) => {
-  const userCollectionRef = collection(db, USER);
+  const userCollectionRef = collection(db, USERS);
   return query(userCollectionRef, where('userId', '!=', userId));
 }
 
@@ -87,13 +113,13 @@ export const getGroupsQuery = () => {
   );
 };
 
-const GROUPMESSAGES = "Messages";
+const GROUPMESSAGES = "GroupMessages";
 
-export const getGroupMessages = (users) => {
+export const getGroupMessages = (groupId) => {
   const groupMessagesRef = collection(db, GROUPMESSAGES);
   return query(
     groupMessagesRef,
-    where("Status", "==", 1)
+    where("GroupId", "==", groupId)
   );
 };
 

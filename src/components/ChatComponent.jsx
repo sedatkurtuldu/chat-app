@@ -2,8 +2,9 @@ import { StyleSheet, Text, View, Image, Platform } from "react-native";
 import React from "react";
 import moment from "moment";
 
-const ChatComponent = ({ item, currentUser, isGroup }) => {
+const ChatComponent = ({ item, currentUser, isGroup, usersDisplayNames }) => {
   const isSender = item.SenderUserId === currentUser;
+  const senderName = isGroup ? usersDisplayNames[item.SenderUserId] : "";
 
   return (
     <View
@@ -17,16 +18,16 @@ const ChatComponent = ({ item, currentUser, isGroup }) => {
         height: item.ImageUrl ? 240 : 'auto',
       }}
     >
-      {isGroup && !isSender && (
-        <Text style={{ fontWeight: "bold", marginBottom: 5 }}>
-          {item.SenderDisplayName || "Unknown"}
+      {isGroup && senderName && (
+        <Text style={{ fontWeight: "bold", marginBottom: 5, color: "#7c3aed" }}>
+          {senderName}
         </Text>
       )}
       
       {item.ImageUrl ? (
         <Image
           source={{ uri: item.ImageUrl }}
-          style={{ width: Platform.OS == "android" ? 290 : 273, height: 200, borderRadius: 10 }}
+          style={{ width: Platform.OS == "android" ? 290 : 273, height: isGroup ? 180 : 200, borderRadius: 10 }}
         />
       ) : (
         <Text style={{ fontSize: 16, textAlign: "left" }}>{item.Message}</Text>
