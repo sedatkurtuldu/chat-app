@@ -1,68 +1,78 @@
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import React, { useEffect, useState } from 'react';
-import { auth } from '../../server/firebase';
-import { getMessagesQuery, getUsersQuery } from '../../server/api';
-import MessageListComponent from '../components/MessageListComponent';
-import { onSnapshot } from 'firebase/firestore';
+import { FlatList, StyleSheet, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { auth } from "../../server/firebase";
+import { getMessagesQuery, getUsersQuery } from "../../server/api";
+import MessageListComponent from "../components/MessageListComponent";
+import { onSnapshot } from "firebase/firestore";
+import { FAB, Portal, PaperProvider } from "react-native-paper";
 
 const HomeScreen = ({ navigation }) => {
   const [users, setUsers] = useState([]);
+  const [fabState, setFabState] = useState({ open: false });
 
   useEffect(() => {
     const unsubscribers = new Map();
-  
+
     const fetchUsers = async () => {
       const q = getUsersQuery(auth.currentUser.uid);
-  
+
       const unsubscribeFromUsers = onSnapshot(q, (snapshot) => {
-        const usersList = snapshot.docs.map(doc => ({
+        const usersList = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
           lastMessage: null,
         }));
-  
+
         setUsers(usersList);
-  
-        unsubscribers.forEach(unsub => unsub());
-  
-        usersList.forEach(user => {
+
+        unsubscribers.forEach((unsub) => unsub());
+
+        usersList.forEach((user) => {
           const q2 = getMessagesQuery(auth.currentUser.uid, user.userId);
-  
+
           const unsubscribeFromMessages = onSnapshot(q2, (snapshot) => {
-            const messages = snapshot.docs.map(doc => ({
+            const messages = snapshot.docs.map((doc) => ({
               id: doc.id,
               ...doc.data(),
             }));
-  
-            const sortedMessages = messages.sort((a, b) => a.SendTime - b.SendTime);
+
+            const sortedMessages = messages.sort(
+              (a, b) => a.SendTime - b.SendTime
+            );
             const latestMessage = sortedMessages[sortedMessages.length - 1];
-            const statusOneCount = messages.filter(message => message.Status === 1).length;
+            const statusOneCount = messages.filter(
+              (message) => message.Status === 1
+            ).length;
             const receiverUserId = latestMessage?.ReceiverUserId;
-  
-            setUsers(prevUsers => {
-              return prevUsers.map(u => 
-                u.id === user.id ? { 
-                  ...u, 
-                  lastMessage: latestMessage, 
-                  read: statusOneCount, 
-                  ...(receiverUserId && { receiverUserId: receiverUserId }) 
-                } : u
+
+            setUsers((prevUsers) => {
+              return prevUsers.map((u) =>
+                u.id === user.id
+                  ? {
+                      ...u,
+                      lastMessage: latestMessage,
+                      read: statusOneCount,
+                      ...(receiverUserId && { receiverUserId: receiverUserId }),
+                    }
+                  : u
               );
             });
           });
-  
+
           unsubscribers.set(user.userId, unsubscribeFromMessages);
         });
       });
-  
+
       return () => {
         unsubscribeFromUsers();
-        unsubscribers.forEach(unsub => unsub());
+        unsubscribers.forEach((unsub) => unsub());
       };
     };
-  
+
     fetchUsers();
   }, []);
+
+  const onFabStateChange = ({ open }) => setFabState({ open });
 
   const renderItem = ({ item }) => (
     <MessageListComponent item={item} navigation={navigation} />
@@ -74,6 +84,11 @@ const HomeScreen = ({ navigation }) => {
         data={users}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
+      />
+      <FAB
+        icon="plus"
+        className="absolute m-4 right-3 bottom-8"
+        onPress={() => navigation.navigate("AddGroupModalScreen")}
       />
     </View>
   );

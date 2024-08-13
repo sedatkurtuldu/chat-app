@@ -34,7 +34,7 @@ const ChatsHeaderRight = ({ userId, navigation }) => {
   };
 
   return (
-    <View className="justify-center items-center">
+    <View className="justify-center items-center mr-3.5">
       {loading ? (
         <ActivityIndicator size="small" color="#0000ff" />
       ) : (
