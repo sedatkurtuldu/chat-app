@@ -19,9 +19,8 @@ import { getMessagesQuery } from "../../server/api";
 import { debounce } from "lodash";
 
 const ChatRoomScreen = ({ route, navigation }) => {
-  const { id, displayName, profileImage } = route.params;
+  const { id, displayName, profileImage, isGroup, Users } = route.params;
   const scrollViewRef = useRef(null);
-  const ws = useRef(null);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
 
@@ -38,28 +37,6 @@ const ChatRoomScreen = ({ route, navigation }) => {
     };
   }, []);
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerTitle: displayName,
-      headerTitleAlign: "left",
-      headerLeft: () => (
-        <View className="flex-row items-center ml-3.5">
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            className="mr-3"
-          >
-            <Ionicons name="arrow-back" size={24} color="black" />
-          </TouchableOpacity>
-          <Image
-            style={{ height: 38, width: 38, borderRadius: 19}}
-            source={{ uri: profileImage }}
-          />
-        </View>
-      ),
-    });
-  }, [navigation, displayName, profileImage]);
-
-  //STATUS 1 OKUNMADI STATUS 2 OKUNDU
   useEffect(() => {
     const q = getMessagesQuery(auth.currentUser.uid, id);
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -80,26 +57,48 @@ const ChatRoomScreen = ({ route, navigation }) => {
     return () => unsubscribe();
   }, [id]);
 
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerTitle: displayName,
+      headerTitleAlign: "left",
+      headerLeft: () => (
+        <View className="flex-row items-center ml-3.5">
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            className="mr-3"
+          >
+            <Ionicons name="arrow-back" size={24} color="black" />
+          </TouchableOpacity>
+          <Image
+            style={{ height: 38, width: 38, borderRadius: 19 }}
+            source={{ uri: profileImage }}
+          />
+        </View>
+      ),
+    });
+  }, [navigation, displayName, profileImage]);
+
   const debouncedHandleSend = useCallback(debounce(async () => {
     if (message.trim() === "") return;
 
     const currentUser = auth.currentUser.uid;
     const newMessage = {
-      ReceiverUserId: id,
       SenderUserId: currentUser,
       Message: message,
       SendTime: new Date().toISOString(),
       Status: 1,
+      ...(isGroup ? { Users: Users } : { ReceiverUserId: id }),
     };
 
     try {
-      await addDoc(collection(db, "Messages"), newMessage);
+      const collectionName = isGroup ? "GroupMessages" : "Messages";
+      await addDoc(collection(db, collectionName), newMessage);
 
       setMessage("");
     } catch (error) {
-      console.error("Mesaj gönderme hatası: ", error);
+      console.error("Error sending message: ", error);
     }
-  }, 300), [message, id]);
+  }, 300), [message, id, isGroup, Users]);
 
   const handleSend = () => {
     debouncedHandleSend();
@@ -113,38 +112,37 @@ const ChatRoomScreen = ({ route, navigation }) => {
         aspect: [4, 3],
         quality: 0.3,
       });
-  
+
       if (!result.canceled) {
         const imageUri = result.assets[0].uri;
-  
+
         const response = await fetch(imageUri);
         const blob = await response.blob();
-        const uniqueName = `uploadImages/${Date.now()}.jpg`;
-  
+        const uniqueName = `${isGroup ? 'uploadGroupImages' : 'uploadImages'}/${Date.now()}.jpg`;
+
         const storage = getStorage();
         const storageRef = ref(storage, uniqueName);
-  
-        await uploadBytes(storageRef, blob).then(async (snapshot) => {
 
+        await uploadBytes(storageRef, blob).then(async () => {
           const downloadURL = await getDownloadURL(storageRef);
-  
+
           const imgMsg = {
-            ReceiverUserId: id,
             SenderUserId: auth.currentUser.uid,
             Message: "",
             ImageUrl: downloadURL,
             SendTime: new Date().toISOString(),
             Status: 1,
+            ...(isGroup ? { Users: Users } : { ReceiverUserId: id }),
           };
-          
-          await addDoc(collection(db, "Messages"), imgMsg);
+
+          const collectionName = isGroup ? "GroupMessages" : "Messages";
+          await addDoc(collection(db, collectionName), imgMsg);
         });
       }
     } catch (error) {
       console.error("Error handling image picker:", error);
     }
-  }, 300), [id]);
-  
+  }, 300), [id, isGroup, Users]);
 
   const handlePickAndSendImage = () => {
     debouncedHandlePickAndSendImage();

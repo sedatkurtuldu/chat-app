@@ -76,3 +76,24 @@ export const getMessagesQuery = (currentUserId, chatPartnerId) => {
     orderBy("SendTime")
   );
 };
+
+const GROUPS = "Groups";
+
+export const getGroupsQuery = () => {
+  const groupsRef = collection(db, GROUPS);
+  return query(
+    groupsRef,
+    where("Status", "==", 1)
+  );
+};
+
+const GROUPMESSAGES = "Messages";
+
+export const getGroupMessages = (users) => {
+  const groupMessagesRef = collection(db, GROUPMESSAGES);
+  return query(
+    groupMessagesRef,
+    where("Status", "==", 1)
+  );
+};
+

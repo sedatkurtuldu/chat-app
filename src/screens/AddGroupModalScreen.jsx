@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, Image, ScrollView, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+  Alert,
+} from "react-native";
 import { TextInput, Button, Card } from "react-native-paper";
 import * as ImagePicker from "expo-image-picker";
 import { getUsersQuery } from "../../server/api";
@@ -12,18 +19,16 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 const AddGroupModalScreen = () => {
   const [groupName, setGroupName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedUserIds, setSelectedUserIds] = useState([]);
+  const [selectedUserIds, setSelectedUserIds] = useState([auth.currentUser.uid,]);
   const [users, setUsers] = useState([]);
   const [image, setImage] = useState(null);
 
   useEffect(() => {
     const q = getUsersQuery(auth.currentUser.uid);
-
     const unsubscribeFromUsers = onSnapshot(q, (snapshot) => {
       const usersList = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-        lastMessage: null,
       }));
       setUsers(usersList);
     });
@@ -69,38 +74,38 @@ const AddGroupModalScreen = () => {
       Alert.alert("Hata", "Grup adı boş olamaz.");
       return;
     }
-  
-    if (selectedUserIds.length === 0) {
+
+    if (selectedUserIds.length === 1) {
       Alert.alert("Hata", "En az bir kişi seçmelisiniz.");
       return;
     }
-  
+
     if (!image) {
       Alert.alert("Hata", "Bir grup resmi seçmelisiniz.");
       return;
     }
-  
+
     const currentUser = auth.currentUser.uid;
-  
+
     try {
       const storage = getStorage();
       const storageRef = ref(storage, `groupImages/${Date.now()}.jpg`);
-  
+
       const blob = await fetch(image).then((response) => response.blob());
       await uploadBytes(storageRef, blob);
       const imageUrl = await getDownloadURL(storageRef);
-  
+
       const newGroup = {
         Name: groupName,
         ImageUrl: imageUrl,
         Users: selectedUserIds,
         CreatorId: currentUser,
-        SendTime: new Date().toISOString(),
+        CreatedTime: new Date().toISOString(),
         Status: 1,
       };
-  
+
       await addDoc(collection(db, "Groups"), newGroup);
-  
+
       Alert.alert("Başarılı", "Grup başarıyla oluşturuldu!");
     } catch (error) {
       console.error("Grup oluşturma hatası: ", error);
@@ -142,7 +147,6 @@ const AddGroupModalScreen = () => {
       keyboardShouldPersistTaps="handled"
     >
       <View className="flex-1 bg-white">
-        {/* Profile Image Section */}
         <View className="relative items-center mb-4">
           <TouchableOpacity activeOpacity={0.6} onPress={pickImage}>
             <Image
@@ -162,11 +166,11 @@ const AddGroupModalScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Selected Contacts */}
         <View className="p-4">
           <Text className="text-lg font-bold">Seçilen Kişiler:</Text>
           <ScrollView>
             {selectedUserIds
+              .filter((userId) => userId !== auth.currentUser.uid)
               .map((userId) => users.find((user) => user.userId === userId))
               .filter((user) => user)
               .map((item) => (
@@ -179,7 +183,8 @@ const AddGroupModalScreen = () => {
                   <Image
                     source={{
                       uri:
-                        item.profileImage || "https://via.placeholder.com/40",
+                        item.profileImage ||
+                        "https://www.mountsinai.on.ca/wellbeing/our-team/team-images/person-placeholder/image",
                     }}
                     className="w-10 h-10 rounded-full mr-2"
                   />
@@ -192,7 +197,6 @@ const AddGroupModalScreen = () => {
           </ScrollView>
         </View>
 
-        {/* Group Name Input */}
         <View className="p-4">
           <TextInput
             activeOutlineColor="#7c3aed"
@@ -203,7 +207,6 @@ const AddGroupModalScreen = () => {
           />
         </View>
 
-        {/* Search Input */}
         <View className="p-4">
           <TextInput
             activeOutlineColor="#7c3aed"
@@ -215,15 +218,13 @@ const AddGroupModalScreen = () => {
           />
         </View>
 
-        {/* User List */}
         <ScrollView>{filteredUsers.map(renderItem)}</ScrollView>
 
-        {/* Create Group Button */}
         <View className="p-4 mb-2">
           <Button
             buttonColor="#7c3aed"
             mode="contained"
-            onPress={handleCreateGroup} // Updated handler
+            onPress={handleCreateGroup}
           >
             Grup Oluştur
           </Button>
