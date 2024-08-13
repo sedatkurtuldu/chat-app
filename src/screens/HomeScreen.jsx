@@ -1,14 +1,18 @@
 import { FlatList, StyleSheet, View } from "react-native";
 import React, { useEffect, useState } from "react";
 import { auth } from "../../server/firebase";
-import { getMessagesQuery, getUsersQuery } from "../../server/api";
+import {
+  getGroupsQuery,
+  getMessagesQuery,
+  getUsersQuery,
+} from "../../server/api";
 import MessageListComponent from "../components/MessageListComponent";
 import { onSnapshot } from "firebase/firestore";
-import { FAB, Portal, PaperProvider } from "react-native-paper";
+import { FAB } from "react-native-paper";
 
 const HomeScreen = ({ navigation }) => {
   const [users, setUsers] = useState([]);
-  const [fabState, setFabState] = useState({ open: false });
+  const [groups, setGroups] = useState([]);
 
   useEffect(() => {
     const unsubscribers = new Map();
@@ -21,6 +25,7 @@ const HomeScreen = ({ navigation }) => {
           id: doc.id,
           ...doc.data(),
           lastMessage: null,
+          type: "user",
         }));
 
         setUsers(usersList);
@@ -72,7 +77,24 @@ const HomeScreen = ({ navigation }) => {
     fetchUsers();
   }, []);
 
-  const onFabStateChange = ({ open }) => setFabState({ open });
+  useEffect(() => {
+    const q = getGroupsQuery(auth.currentUser.uid);
+    const unsubscribeFromGroups = onSnapshot(q, (snapshot) => {
+      const groupList = snapshot.docs
+        .map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          type: "group",
+        }))
+        .filter((group) => group.Users.includes(auth.currentUser.uid));
+
+      setGroups(groupList);
+    });
+
+    return () => {
+      unsubscribeFromGroups();
+    };
+  }, []);
 
   const renderItem = ({ item }) => (
     <MessageListComponent item={item} navigation={navigation} />
@@ -81,7 +103,7 @@ const HomeScreen = ({ navigation }) => {
   return (
     <View className="flex-1 bg-white">
       <FlatList
-        data={users}
+        data={[...groups, ...users]}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
       />

@@ -1,9 +1,10 @@
-import { StyleSheet, Text, View, Image } from "react-native";
+import { StyleSheet, Text, View, Image, Platform } from "react-native";
 import React from "react";
 import moment from "moment";
 
-const ChatComponent = ({ item, currentUser }) => {
+const ChatComponent = ({ item, currentUser, isGroup }) => {
   const isSender = item.SenderUserId === currentUser;
+
   return (
     <View
       style={{
@@ -14,17 +15,23 @@ const ChatComponent = ({ item, currentUser }) => {
         backgroundColor: isSender ? "white" : "#e6e6fa",
         alignSelf: isSender ? "flex-end" : "flex-start",
         height: item.ImageUrl ? 240 : 'auto',
-        
       }}
     >
+      {isGroup && !isSender && (
+        <Text style={{ fontWeight: "bold", marginBottom: 5 }}>
+          {item.SenderDisplayName || "Unknown"}
+        </Text>
+      )}
+      
       {item.ImageUrl ? (
         <Image
           source={{ uri: item.ImageUrl }}
-          style={{ width: 290, height: 200, borderRadius: 10 }}
+          style={{ width: Platform.OS == "android" ? 290 : 273, height: 200, borderRadius: 10 }}
         />
       ) : (
         <Text style={{ fontSize: 16, textAlign: "left" }}>{item.Message}</Text>
       )}
+
       <Text
         style={{
           fontSize: 12,

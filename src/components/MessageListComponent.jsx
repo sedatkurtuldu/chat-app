@@ -6,11 +6,23 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 
 const MessageListComponent = ({ item, navigation }) => {
   const navigateToChatRoom = () => {
-    navigation.navigate("ChatRoomScreen", {
-      displayName: item.displayName,
-      profileImage: item.profileImage,
-      id: item.userId,
-    });
+    if (item.type === "group") {
+      navigation.navigate("ChatRoomScreen", {
+        displayName: item.Name,
+        profileImage: item.ImageUrl,
+        id: item.id,
+        isGroup: true,
+        Users: item.Users
+      });
+    } else {
+      navigation.navigate("ChatRoomScreen", {
+        displayName: item.displayName,
+        profileImage: item.profileImage,
+        id: item.userId,
+        isGroup: false,
+        Users: []
+      });
+    }
   };
 
   return (
@@ -25,23 +37,24 @@ const MessageListComponent = ({ item, navigation }) => {
             height={60}
             width={60}
             className="w-15 h-15 rounded-full"
-            source={{ uri: item.profileImage }}
+            source={{ uri: item.type === "group" ? item.ImageUrl : item.profileImage }}
           />
         </View>
         <View className="justify-center ml-4">
-          <Text className="text-lg font-bold">{item.displayName}</Text>
+          <Text className="text-lg font-bold">
+            {item.type === "group" ? item.Name : item.displayName}
+          </Text>
           {item.lastMessage ? (
             item.lastMessage.ImageUrl ? (
               <View className="flex-row items-center gap-1.5">
                 <AntDesign name="camera" size={18} color="darkgrey" />
                 <Text>Fotoğraf</Text>
               </View>
-              
             ) : (
               <Text className="text-gray-600">{item.lastMessage.Message}</Text>
             )
           ) : (
-            <Text className="text-gray-600"> Hi👋 I'm using Akko!</Text>
+            <Text className="text-gray-600">Hi👋 I'm using Akko!</Text>
           )}
         </View>
       </View>
