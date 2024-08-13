@@ -9,6 +9,7 @@ import {
 import MessageListComponent from "../components/MessageListComponent";
 import { onSnapshot } from "firebase/firestore";
 import { FAB } from "react-native-paper";
+import { getGroupMessages, getUserDisplayNames } from "../../server/api";
 
 const HomeScreen = ({ navigation }) => {
   const [users, setUsers] = useState([]);
@@ -17,10 +18,10 @@ const HomeScreen = ({ navigation }) => {
 
   useEffect(() => {
     const unsubscribers = new Map();
-
+  
     const fetchUsers = async () => {
       const q = getUsersQuery(auth.currentUser.uid);
-
+  
       const unsubscribeFromUsers = onSnapshot(q, (snapshot) => {
         const usersList = snapshot.docs.map((doc) => ({
           id: doc.id,
@@ -28,20 +29,20 @@ const HomeScreen = ({ navigation }) => {
           lastMessage: null,
           type: "user",
         }));
-
+  
         setUsers(usersList);
-
+  
         unsubscribers.forEach((unsub) => unsub());
-
+  
         usersList.forEach((user) => {
           const q2 = getMessagesQuery(auth.currentUser.uid, user.userId);
-
+  
           const unsubscribeFromMessages = onSnapshot(q2, (snapshot) => {
             const messages = snapshot.docs.map((doc) => ({
               id: doc.id,
               ...doc.data(),
             }));
-
+  
             const sortedMessages = messages.sort(
               (a, b) => a.SendTime - b.SendTime
             );
@@ -50,7 +51,7 @@ const HomeScreen = ({ navigation }) => {
               (message) => message.Status === 1
             ).length;
             const receiverUserId = latestMessage?.ReceiverUserId;
-
+  
             setUsers((prevUsers) => {
               return prevUsers.map((u) =>
                 u.id === user.id
@@ -64,38 +65,83 @@ const HomeScreen = ({ navigation }) => {
               );
             });
           });
-
+  
           unsubscribers.set(user.userId, unsubscribeFromMessages);
         });
       });
-
+  
       return () => {
         unsubscribeFromUsers();
         unsubscribers.forEach((unsub) => unsub());
       };
     };
+  
+    const fetchGroups = async () => {
+      const q = getGroupsQuery(auth.currentUser.uid);
+      const unsubscribeFromGroups = onSnapshot(q, async (snapshot) => {
+        const groupList = snapshot.docs
+          .map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+            type: "group",
+            lastMessage: null,
+          }))
+          .filter((group) => group.Users.includes(auth.currentUser.uid));
+    
+        setGroups(groupList);
+    
+        const userDisplayNames = await getUserDisplayNames();
+    
+        groupList.forEach((group) => {
+          const q2 = getGroupMessages(group.id);
+    
+          const unsubscribeFromMessages = onSnapshot(q2, (snapshot) => {
+            const messages = snapshot.docs.map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            }));
+    
+            const sortedMessages = messages.sort((a, b) => {
+              const aSendTime = new Date(a.SendTime).getTime();
+              const bSendTime = new Date(b.SendTime).getTime();
+              return aSendTime - bSendTime;
+            });
+    
+            const latestMessage = sortedMessages[sortedMessages.length - 1] || {};
+            const statusOneCount = messages.filter((message) => message.Status === 1).length;
+    
+            const latestMessageWithDisplayName = {
+              ...latestMessage,
+              SenderDisplayName: userDisplayNames[latestMessage.SenderUserId],
+            };
+    
+            setGroups((prevGroups) => {
+              return prevGroups.map((g) =>
+                g.id === group.id
+                  ? {
+                      ...g,
+                      lastMessage: latestMessageWithDisplayName,
+                      read: statusOneCount,
+                    }
+                  : g
+              );
+            });
+          });
+    
+          unsubscribers.set(group.id, unsubscribeFromMessages);
+        });
+      });
+    
+      return () => {
+        unsubscribeFromGroups();
+        unsubscribers.forEach((unsub) => unsub());
+      };
+    };
 
     fetchUsers();
+    fetchGroups();
   }, []);
-
-  useEffect(() => {
-    const q = getGroupsQuery(auth.currentUser.uid);
-    const unsubscribeFromGroups = onSnapshot(q, (snapshot) => {
-      const groupList = snapshot.docs
-        .map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          type: "group",
-        }))
-        .filter((group) => group.Users.includes(auth.currentUser.uid));
-
-      setGroups(groupList);
-    });
-
-    return () => {
-      unsubscribeFromGroups();
-    };
-  }, []);
+  
 
   const renderItem = ({ item }) => (
     <MessageListComponent item={item} navigation={navigation} />

@@ -4,7 +4,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import TextInputComponent from "../components/TextInputComponent";
 import { signInWithEmailAndPassword } from "@firebase/auth";
 import { auth } from "../../server/firebase";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiConstant } from "../../constants/apiConstant";
 
 const LoginScreen = ({ navigation }) => {
@@ -26,32 +25,32 @@ const LoginScreen = ({ navigation }) => {
       );
       const token = await userCredential.user.getIdToken();
 
-      fetch(`${apiConstant.apiUrlAsPcIp}/auth`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ token }),
-      })
-        .then(async (response) => {
-          if (response.status === 200) {
-            navigation.navigate("HomeScreen");
-          } else {
-            Alert.alert(
-              "Başarısız!",
-              "Giriş yaparken bir hata oluştu, lütfen tekrar deneyin.",
-              [{ text: "TAMAM" }]
-            );
-          }
-        })
-        .catch((error) => {
-          console.error("Giriş yaparken bir hata oluştu: ", error.message);
-          Alert.alert(
-            "Başarısız!",
-            "Giriş yaparken bir hata oluştu, lütfen tekrar deneyin.",
-            [{ text: "TAMAM" }]
-          );
-        });
+      // fetch(`${apiConstant.apiUrlAsPcIp}/auth`, {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify({ token }),
+      // })
+      //   .then(async (response) => {
+      //     if (response.status === 200) {
+      //       navigation.navigate("HomeScreen");
+      //     } else {
+      //       Alert.alert(
+      //         "Başarısız!",
+      //         "Giriş yaparken bir hata oluştu, lütfen tekrar deneyin.",
+      //         [{ text: "TAMAM" }]
+      //       );
+      //     }
+      //   })
+      //   .catch((error) => {
+      //     console.error("Giriş yaparken bir hata oluştu: ", error.message);
+      //     Alert.alert(
+      //       "Başarısız!",
+      //       "Giriş yaparken bir hata oluştu, lütfen tekrar deneyin.",
+      //       [{ text: "TAMAM" }]
+      //     );
+      //   });
     } catch (error) {
       console.error("Giriş yaparken bir hata oluştu: ", error.message);
       Alert.alert(

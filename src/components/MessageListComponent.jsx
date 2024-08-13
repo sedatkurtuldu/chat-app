@@ -2,7 +2,7 @@ import { Image, Text, TouchableOpacity, View } from "react-native";
 import React from "react";
 import moment from "moment";
 import { auth } from "../../server/firebase";
-import AntDesign from '@expo/vector-icons/AntDesign';
+import AntDesign from "@expo/vector-icons/AntDesign";
 
 const MessageListComponent = ({ item, navigation }) => {
   const navigateToChatRoom = () => {
@@ -12,7 +12,7 @@ const MessageListComponent = ({ item, navigation }) => {
         profileImage: item.ImageUrl,
         id: item.id,
         isGroup: true,
-        Users: item.Users
+        Users: item.Users,
       });
     } else {
       navigation.navigate("ChatRoomScreen", {
@@ -20,7 +20,7 @@ const MessageListComponent = ({ item, navigation }) => {
         profileImage: item.profileImage,
         id: item.userId,
         isGroup: false,
-        Users: []
+        Users: [],
       });
     }
   };
@@ -37,7 +37,9 @@ const MessageListComponent = ({ item, navigation }) => {
             height={60}
             width={60}
             className="w-15 h-15 rounded-full"
-            source={{ uri: item.type === "group" ? item.ImageUrl : item.profileImage }}
+            source={{
+              uri: item.type === "group" ? item.ImageUrl : item.profileImage,
+            }}
           />
         </View>
         <View className="justify-center ml-4">
@@ -51,7 +53,29 @@ const MessageListComponent = ({ item, navigation }) => {
                 <Text>Fotoğraf</Text>
               </View>
             ) : (
-              <Text className="text-gray-600">{item.lastMessage.Message}</Text>
+              <View className="flex-row items-start">
+                {item.type === "group" ? (
+                  item.lastMessage.SenderDisplayName ? (
+                    <>
+                      <Text className="text-violet-600 font-bold">
+                        {item.lastMessage.SenderDisplayName}:
+                      </Text>
+                      <Text className="text-gray-600 ml-0.5">
+                        {item.lastMessage.Message}
+                      </Text>
+                    </>
+                  ) : (
+                    <Text className="text-gray-600">
+                      Hi👋 This group is using Akko!
+                    </Text>
+                  )
+                ) : null}
+                {item.type !== "group" && (
+                  <Text className="text-gray-600">
+                    {item.lastMessage.Message}
+                  </Text>
+                )}
+              </View>
             )
           ) : (
             <Text className="text-gray-600">Hi👋 I'm using Akko!</Text>
@@ -64,11 +88,18 @@ const MessageListComponent = ({ item, navigation }) => {
             {moment(item.lastMessage.SendTime).format("HH:mm")}
           </Text>
         )}
-        {item.read > 0 && item.receiverUserId === auth.currentUser.uid && (
-          <View className="bg-violet-600 rounded-full w-7 h-7 justify-center items-center mt-1.5">
-            <Text className="text-white font-bold">{item.read}</Text>
-          </View>
-        )}
+        {item.type === "group"
+          ? item.read > 0 && (
+              <View className="bg-violet-600 rounded-full w-7 h-7 justify-center items-center mt-1.5">
+                <Text className="text-white font-bold">{item.read}</Text>
+              </View>
+            )
+          : item.read > 0 &&
+            item.receiverUserId === auth.currentUser.uid && (
+              <View className="bg-violet-600 rounded-full w-7 h-7 justify-center items-center mt-1.5">
+                <Text className="text-white font-bold">{item.read}</Text>
+              </View>
+            )}
       </View>
     </TouchableOpacity>
   );
