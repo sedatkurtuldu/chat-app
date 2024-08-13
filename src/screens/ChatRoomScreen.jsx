@@ -116,7 +116,6 @@ const ChatRoomScreen = ({ route, navigation }) => {
   
       if (!result.canceled) {
         const imageUri = result.assets[0].uri;
-        console.log("Image selected, uploading to Firebase Storage...");
   
         const response = await fetch(imageUri);
         const blob = await response.blob();

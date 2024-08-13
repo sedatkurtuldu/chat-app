@@ -3,8 +3,9 @@ import { View, Text, TouchableOpacity, Image, ScrollView, Alert } from "react-na
 import { TextInput, Button, Card } from "react-native-paper";
 import * as ImagePicker from "expo-image-picker";
 import { getUsersQuery } from "../../server/api";
-import { auth } from "../../server/firebase";
-import { onSnapshot } from "firebase/firestore";
+import { auth, db } from "../../server/firebase";
+import { addDoc, collection, onSnapshot } from "firebase/firestore";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Feather } from "@expo/vector-icons";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
@@ -42,8 +43,8 @@ const AddGroupModalScreen = () => {
     }
   };
 
-  const handleRemoveContact = (userId) => {
-    setSelectedUserIds(selectedUserIds.filter((id) => id !== userId));
+  const handleRemoveContact = (UserId) => {
+    setSelectedUserIds(selectedUserIds.filter((userId) => userId !== UserId));
   };
 
   const filteredUsers = users.filter((user) =>
@@ -63,33 +64,52 @@ const AddGroupModalScreen = () => {
     }
   };
 
-  const handleCreateGroup = () => {
+  const handleCreateGroup = async () => {
     if (!groupName.trim()) {
       Alert.alert("Hata", "Grup adı boş olamaz.");
       return;
     }
-
+  
     if (selectedUserIds.length === 0) {
       Alert.alert("Hata", "En az bir kişi seçmelisiniz.");
       return;
     }
-
+  
     if (!image) {
-      Alert.alert("Hata", "Bir profil resmi seçmelisiniz.");
+      Alert.alert("Hata", "Bir grup resmi seçmelisiniz.");
       return;
     }
-
-    // Proceed with group creation
-    console.log("Creating group with name:", groupName);
-    console.log("Selected user IDs:", selectedUserIds);
-    console.log("Selected image URI:", image);
-
-    // Add your group creation logic here
+  
+    const currentUser = auth.currentUser.uid;
+  
+    try {
+      const storage = getStorage();
+      const storageRef = ref(storage, `groupImages/${Date.now()}.jpg`);
+  
+      const blob = await fetch(image).then((response) => response.blob());
+      await uploadBytes(storageRef, blob);
+      const imageUrl = await getDownloadURL(storageRef);
+  
+      const newGroup = {
+        Name: groupName,
+        ImageUrl: imageUrl,
+        Users: selectedUserIds,
+        CreatorId: currentUser,
+        SendTime: new Date().toISOString(),
+        Status: 1,
+      };
+  
+      await addDoc(collection(db, "Groups"), newGroup);
+  
+      Alert.alert("Başarılı", "Grup başarıyla oluşturuldu!");
+    } catch (error) {
+      console.error("Grup oluşturma hatası: ", error);
+    }
   };
 
   const renderItem = (item) => (
     <TouchableOpacity
-      key={item.userId}
+      key={item.id}
       onPress={() => handleSelectContact(item)}
       activeOpacity={0.9}
       className="mx-4 mb-2"
@@ -148,10 +168,10 @@ const AddGroupModalScreen = () => {
           <ScrollView>
             {selectedUserIds
               .map((userId) => users.find((user) => user.userId === userId))
-              .filter((user) => user) // Filter out any undefined users
+              .filter((user) => user)
               .map((item) => (
                 <TouchableOpacity
-                  key={item.userId}
+                  key={item.id}
                   onPress={() => handleRemoveContact(item.userId)}
                   className="flex-row items-center mb-2"
                   activeOpacity={0.7}
