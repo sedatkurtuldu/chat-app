@@ -5,8 +5,9 @@ import {
   ActivityIndicator,
   Text,
   TouchableOpacity,
+  Platform,
 } from "react-native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createStackNavigator } from "@react-navigation/stack";
 import LoginScreen from "../screens/LoginScreen";
 import HomeScreen from "../screens/HomeScreen";
 import { auth } from "../../server/firebase";
@@ -14,8 +15,9 @@ import RegisterScreen from "../screens/RegisterScreen";
 import ChatsHeaderRight from "../components/ChatsHeaderRight";
 import ChatRoomScreen from "../screens/ChatRoomScreen";
 import ProfileScreen from "../screens/ProfileScreen";
+import AddGroupModalScreen from "../screens/AddGroupModalScreen";
 
-const Stack = createNativeStackNavigator();
+const Stack = createStackNavigator();
 
 const Router = () => {
   const [user, setUser] = useState(null);
@@ -39,7 +41,7 @@ const Router = () => {
   }
 
   const logOut = () => {
-    auth.signOut()
+    auth.signOut();
   };
 
   return (
@@ -52,6 +54,7 @@ const Router = () => {
             options={({ navigation }) => ({
               headerTitle: "Sohbetler",
               headerShadowVisible: false,
+              headerTitleAlign: "left",
               headerLeft: () => "",
               headerRight: () => (
                 <ChatsHeaderRight userId={user.uid} navigation={navigation} />
@@ -64,25 +67,42 @@ const Router = () => {
               },
             })}
           />
-          <Stack.Screen name="ChatRoomScreen" component={ChatRoomScreen} />
+          <Stack.Screen
+            name="ChatRoomScreen"
+            component={ChatRoomScreen}
+          />
           <Stack.Screen
             name="ProfileScreen"
             component={ProfileScreen}
             options={({ navigation }) => ({
               headerTitle: "",
               headerShadowVisible: false,
+              presentation: "modal",
               headerRight: () => (
                 <TouchableOpacity
-                style={{ backgroundColor: "#6d28d9", padding: 8, borderRadius: 10 }}
+                  style={{
+                    backgroundColor: "#6d28d9",
+                    padding: 8,
+                    borderRadius: 10,
+                    marginRight: 10
+                  }}
                   activeOpacity={0.8}
                   onPress={logOut}
                 >
-                  <Text style={{ color: "white" }}>
-                    Çıkış Yap
-                  </Text>
+                  <Text style={{ color: "white" }}>Çıkış Yap</Text>
                 </TouchableOpacity>
               ),
             })}
+          />
+          <Stack.Screen
+            name="AddGroupModalScreen"
+            component={AddGroupModalScreen}
+            options={{
+              headerTitle: "Yeni Grup",
+              headerTitleAlign: "center",
+              headerShadowVisible: false,
+              presentation: "modal",
+            }}
           />
         </>
       ) : (

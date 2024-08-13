@@ -6,7 +6,6 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  Alert,
 } from "react-native";
 import React, { useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
@@ -14,7 +13,6 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import ChatComponent from "../components/ChatComponent";
 import { auth, db } from "../../server/firebase";
 import * as ImagePicker from "expo-image-picker";
-import { apiConstant } from "../../constants/apiConstant";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { addDoc, collection, onSnapshot, updateDoc } from "firebase/firestore";
 import { getMessagesQuery } from "../../server/api";
@@ -43,16 +41,17 @@ const ChatRoomScreen = ({ route, navigation }) => {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerTitle: displayName,
+      headerTitleAlign: "left",
       headerLeft: () => (
-        <View className="flex-row items-center">
+        <View className="flex-row items-center ml-3.5">
           <TouchableOpacity
             onPress={() => navigation.goBack()}
-            className="mr-4"
+            className="mr-3"
           >
             <Ionicons name="arrow-back" size={24} color="black" />
           </TouchableOpacity>
           <Image
-            style={{ height: 38, width: 38, borderRadius: 19, marginRight: 12 }}
+            style={{ height: 38, width: 38, borderRadius: 19}}
             source={{ uri: profileImage }}
           />
         </View>
@@ -81,57 +80,6 @@ const ChatRoomScreen = ({ route, navigation }) => {
     return () => unsubscribe();
   }, [id]);
 
-  // useEffect(() => {
-  //   startWebSocket();
-
-  //   return () => {
-  //     if (ws.current) {
-  //       ws.current.close();
-  //     }
-  //   };
-  // }, []);
-
-  // const startWebSocket = () => {
-  //   console.log("WebSocket started.");
-  //   ws.current = new WebSocket(`ws://${apiConstant.ip}`);
-  //   ws.current.onmessage = (e) => {
-  //     console.log(`Received: ${e.data}`);
-  //     const msg = JSON.parse(e.data);
-  //     // handleReceive(msg);
-  //   };
-  //   ws.current.onclose = (e) => {
-  //     console.log("Reconnecting: ", e.message);
-  //     setTimeout(startWebSocket, 5000);
-  //   };
-  //   ws.current.onerror = (e) => {
-  //     console.log(`Error: ${e.message}`);
-  //   };
-  // };
-
-  // const handleReceive = async (receivedMsg) => {
-  //   console.log("ReceivedMessage: ", receivedMsg)
-  //   await addDoc(collection(db, "Messages"), receivedMsg)
-  //     .then(() => {
-  //       setMessages((prevMessages) => {
-  //         if (
-  //           !prevMessages.find(
-  //             (msg) =>
-  //               msg.SendTime === receivedMsg.SendTime &&
-  //               msg.Message === receivedMsg.Message
-  //           )
-  //         ) {
-  //           return [...prevMessages, receivedMsg].sort(
-  //             (a, b) => new Date(a.SendTime) - new Date(b.SendTime)
-  //           );
-  //         }
-  //         return prevMessages;
-  //       });
-  //     })
-  //     .catch((error) => {
-  //       console.error("Error adding document: ", error);
-  //     });
-  // };
-
   const debouncedHandleSend = useCallback(debounce(async () => {
     if (message.trim() === "") return;
 
@@ -147,12 +95,6 @@ const ChatRoomScreen = ({ route, navigation }) => {
     try {
       await addDoc(collection(db, "Messages"), newMessage);
 
-      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-        ws.current.send(JSON.stringify(newMessage));
-      } else {
-        console.log("WebSocket is not open. Cannot send message.");
-      }
-
       setMessage("");
     } catch (error) {
       console.error("Mesaj gönderme hatası: ", error);
@@ -165,14 +107,12 @@ const ChatRoomScreen = ({ route, navigation }) => {
 
   const debouncedHandlePickAndSendImage = useCallback(debounce(async () => {
     try {
-      console.log("Requesting image picker...");
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.3,
       });
-      console.log("Image picker result:", result);
   
       if (!result.canceled) {
         const imageUri = result.assets[0].uri;
@@ -210,136 +150,6 @@ const ChatRoomScreen = ({ route, navigation }) => {
   const handlePickAndSendImage = () => {
     debouncedHandlePickAndSendImage();
   };
-
-  // useEffect(() => {
-  //   startWebSocket();
-  //   return () => {
-  //     if (ws.current) {
-  //       ws.current.close();
-  //     }
-  //   };
-  // }, []);
-
-  // const startWebSocket = () => {
-  //   console.log("WebSocket started.");
-  //   ws.current = new WebSocket(`ws://${apiConstant.ip}`);
-
-  //   ws.current.onmessage = (e) => {
-  //     console.log(`Received: ${e.data}`);
-  //     const msg = JSON.parse(e.data);
-
-  //     console.log("Msg: ", msg)
-  //     setMessages((prevMessages) => [...prevMessages, msg]);
-  //   };
-
-  //   ws.current.onclose = (e) => {
-  //     console.log("Reconnecting: ", e.message);
-  //     setTimeout(startWebSocket, 5000);
-  //   };
-
-  //   ws.current.onerror = (e) => {
-  //     console.log(`Error: ${e.message}`);
-  //   };
-  // };
-
-  // const handleSend = async () => {
-  //   if (message.trim() === "") return;
-
-  //   const currentUser = auth.currentUser.uid;
-  //   const newMessage = {
-  //     chatPartnerId: id,
-  //     currentUserId: currentUser,
-  //     message: message,
-  //   };
-
-  //   try {
-  //     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-  //       ws.current.send(JSON.stringify(newMessage));
-  //     } else {
-  //       console.log("WebSocket is not open. Cannot send message.");
-  //     }
-
-  //     const response = await fetch(`${apiConstant.apiUrlAsPcIp}/sendMessage`, {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify(newMessage),
-  //     });
-
-  //     if (!response.ok) {
-  //       throw new Error(`HTTP error! Status: ${response.status}`);
-  //     }
-
-  //     setMessage("");
-  //   } catch (error) {
-  //     console.error("Message sending error: ", error);
-  //   }
-  // };
-
-  // const handlePickAndSendImage = async () => {
-  //   try {
-  //     console.log("Requesting image picker...");
-  //     const result = await ImagePicker.launchImageLibraryAsync({
-  //       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-  //       allowsEditing: true,
-  //       aspect: [4, 3],
-  //       quality: 0.3,
-  //     });
-  //     console.log("Image picker result:", result);
-
-  //     if (!result.canceled) {
-  //       const imageUri = result.assets[0].uri;
-  //       console.log("Image selected, uploading to Firebase Storage...");
-
-  //       const response = await fetch(imageUri);
-  //       const blob = await response.blob();
-  //       const uniqueName = `uploadImages/${Date.now()}.jpg`;
-
-  //       const storage = getStorage();
-  //       const storageRef = ref(storage, uniqueName);
-
-  //       await uploadBytes(storageRef, blob).then(async (snapshot) => {
-  //         console.log("Image uploaded to Firebase Storage:", snapshot);
-
-  //         const downloadURL = await getDownloadURL(storageRef);
-  //         console.log("Download URL:", downloadURL);
-
-  //         const imgMsg = {
-  //           ReceiverUserId: id,
-  //           SenderUserId: auth.currentUser.uid,
-  //           Message: "",
-  //           ImageUrl: downloadURL,
-  //           SendTime: new Date().toISOString(),
-  //           Status: 1,
-  //         };
-
-  //         if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-  //           ws.current.send(JSON.stringify(imgMsg));
-  //         } else {
-  //           console.log("WebSocket is not open. Cannot send image message.");
-  //         }
-
-  //         // Save image message to the server via API endpoint
-  //         const imgMsgResponse = await fetch(`${apiConstant.apiUrlAsPcIp}/messages/sendMessage`, {
-  //           method: "POST",
-  //           headers: {
-  //             "Content-Type": "application/json",
-  //           },
-  //           body: JSON.stringify(imgMsg),
-  //         });
-
-  //         if (!imgMsgResponse.ok) {
-  //           throw new Error(`HTTP error! Status: ${imgMsgResponse.status}`);
-  //         }
-
-  //         console.log("Message with image sent");
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.error("Error handling image picker:", error);
-  //   }
-  // };
 
   return (
     <View className="flex-1">
