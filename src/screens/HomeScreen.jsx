@@ -108,7 +108,8 @@ const HomeScreen = ({ navigation }) => {
             });
     
             const latestMessage = sortedMessages[sortedMessages.length - 1] || {};
-            const statusOneCount = messages.filter((message) => message.Status === 1).length;
+            const userId = auth.currentUser.uid;
+            const statusOneCount = sortedMessages.filter((message) => message[userId] === 1).length;
     
             const latestMessageWithDisplayName = {
               ...latestMessage,

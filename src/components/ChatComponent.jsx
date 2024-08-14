@@ -6,6 +6,8 @@ const ChatComponent = ({ item, currentUser, isGroup, usersDisplayNames }) => {
   const isSender = item.SenderUserId === currentUser;
   const senderName = isGroup ? usersDisplayNames[item.SenderUserId] : "";
 
+  console.log("Item: ", item)
+
   return (
     <View
       style={{
