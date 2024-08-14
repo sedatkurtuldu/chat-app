@@ -50,7 +50,7 @@ const ChatRoomScreen = ({ route, navigation }) => {
 
   useEffect(() => {
     let unsubscribe;
-
+  
     if (isGroup) {
       const q = getGroupMessages(id);
       unsubscribe = onSnapshot(q, (snapshot) => {
@@ -58,29 +58,31 @@ const ChatRoomScreen = ({ route, navigation }) => {
           ...doc.data(),
           ref: doc.ref,
         }));
-
+  
         fetchedGroupMessages.sort((a, b) => {
           return new Date(a.SendTime) - new Date(b.SendTime);
         });
-
+  
         fetchedGroupMessages.map(async (item) => {
           if (item.GroupId === id) {
-            await updateDoc(item.ref, { Status: 2 });
+            if (item[auth.currentUser.uid] === 1) {
+              await updateDoc(item.ref, { [auth.currentUser.uid]: 2 });
+            }
           }
           return item;
         });
-
+  
         setMessages((prevMessages) => {
           const uniqueMessages = new Map();
-
+  
           prevMessages.forEach((msg) => {
             uniqueMessages.set(msg.ref.id, msg);
           });
-
+  
           fetchedGroupMessages.forEach((msg) => {
             uniqueMessages.set(msg.ref.id, msg);
           });
-
+  
           return Array.from(uniqueMessages.values());
         });
       });
@@ -91,34 +93,34 @@ const ChatRoomScreen = ({ route, navigation }) => {
           ...doc.data(),
           ref: doc.ref,
         }));
-
+  
         fetchedMessages.map(async (item) => {
           if (item.ReceiverUserId === auth.currentUser.uid) {
             await updateDoc(item.ref, { Status: 2 });
           }
           return item;
         });
-
+  
         setMessages((prevMessages) => {
           const uniqueMessages = new Map();
-
+  
           prevMessages.forEach((msg) => {
             uniqueMessages.set(msg.ref.id, msg);
           });
-
+  
           fetchedMessages.forEach((msg) => {
             uniqueMessages.set(msg.ref.id, msg);
           });
-
+  
           return Array.from(uniqueMessages.values());
         });
       });
     }
-
+  
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [id, isGroup]);
+  }, [id, isGroup]);  
 
   useEffect(() => {
     const loadUserDisplayNames = async () => {
@@ -159,20 +161,25 @@ const ChatRoomScreen = ({ route, navigation }) => {
   const debouncedHandleSend = useCallback(
     debounce(async () => {
       if (message.trim() === "") return;
-
+  
       const currentUser = auth.currentUser.uid;
       const newMessage = {
         SenderUserId: currentUser,
         Message: message,
         SendTime: new Date().toISOString(),
-        Status: 1,
-        ...(isGroup ? { GroupId: id } : { ReceiverUserId: id }),
+        ...(isGroup ? { GroupId: id } : { ReceiverUserId: id, Status: 1 }),
       };
-
+  
+      if (isGroup) {
+        Users.forEach(async (userId) => {
+          newMessage[userId] = 1;
+        });
+      }
+  
       try {
         const collectionName = isGroup ? "GroupMessages" : "Messages";
         await addDoc(collection(db, collectionName), newMessage);
-
+  
         setMessage("");
       } catch (error) {
         console.error("Error sending message: ", error);
@@ -180,6 +187,7 @@ const ChatRoomScreen = ({ route, navigation }) => {
     }, 300),
     [message, id, isGroup, Users]
   );
+  
 
   const handleSend = () => {
     debouncedHandleSend();
@@ -200,9 +208,7 @@ const ChatRoomScreen = ({ route, navigation }) => {
 
           const response = await fetch(imageUri);
           const blob = await response.blob();
-          const uniqueName = `${
-            isGroup ? "uploadGroupImages" : "uploadImages"
-          }/${Date.now()}.jpg`;
+          const uniqueName = `${isGroup ? "uploadGroupImages" : "uploadImages"}/${Date.now()}.jpg`;
 
           const storage = getStorage();
           const storageRef = ref(storage, uniqueName);
@@ -215,9 +221,14 @@ const ChatRoomScreen = ({ route, navigation }) => {
               Message: "",
               ImageUrl: downloadURL,
               SendTime: new Date().toISOString(),
-              Status: 1,
-              ...(isGroup ? { GroupId: id } : { ReceiverUserId: id }),
+              ...(isGroup ? { GroupId: id } : { ReceiverUserId: id, Status: 1 }),
             };
+
+            if (isGroup) {
+              Users.forEach(async (userId) => {
+                imgMsg[userId] = 1;
+              });
+            }
 
             const collectionName = isGroup ? "GroupMessages" : "Messages";
             await addDoc(collection(db, collectionName), imgMsg);
