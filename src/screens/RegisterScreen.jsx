@@ -1,7 +1,6 @@
 import {
   Alert,
   Image,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -17,6 +16,7 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { addDoc, collection } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { hashPassword } from "../../helpers/Helpers";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const RegisterScreen = ({ navigation }) => {
   const [userName, setUserName] = useState("");
@@ -98,7 +98,7 @@ const RegisterScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <ScrollView>
+      <KeyboardAwareScrollView>
         <View className="justify-center items-center">
           <Image
             source={
@@ -149,7 +149,7 @@ const RegisterScreen = ({ navigation }) => {
             Giriş Yap
           </Text>
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 };

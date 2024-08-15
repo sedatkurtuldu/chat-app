@@ -5,7 +5,7 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 const ImagePickerComponent = ({ onPress }) => {
   return (
     <TouchableOpacity
-      className="flex-row bg-gray-100 w-11/12 my-2 rounded-xl"
+      className="flex-row bg-gray-100 w-11/12 my-2 rounded-md"
       onPress={onPress}
       activeOpacity={0.8}
     >
