@@ -2,44 +2,35 @@ import { Image, Text, TouchableOpacity, View, Alert } from "react-native";
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import TextInputComponent from "../components/TextInputComponent";
-import { signInWithEmailAndPassword } from "@firebase/auth";
+import { sendPasswordResetEmail } from "@firebase/auth";
 import { auth } from "../../server/firebase";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
-const LoginScreen = ({ navigation }) => {
+const ForgotPasswordScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
 
-  const handleLogin = async () => {
+  const handlePasswordReset = async () => {
     try {
-      if (email === "" || password === "") {
-        Alert.alert("Başarısız!", "E-Posta ve Şifre alanı boş geçilemez.", [
+      if (email === "") {
+        Alert.alert("Başarısız!", "E-Posta alanı boş geçilemez.", [
           { text: "TAMAM" },
         ]);
         return;
       }
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
+      await sendPasswordResetEmail(auth, email);
+      Alert.alert(
+        "Başarılı!",
+        "Şifre sıfırlama talimatları e-posta adresinize gönderildi.",
+        [{ text: "TAMAM", onPress: () => navigation.navigate("LoginScreen") }]
       );
-      const token = await userCredential.user.getIdToken();
     } catch (error) {
-      console.error("Giriş yaparken bir hata oluştu: ", error.message);
+      console.error("Şifre sıfırlanırken bir hata oluştu: ", error.message);
       Alert.alert(
         "Başarısız!",
-        "Giriş yaparken bir hata oluştu, lütfen tekrar deneyin.",
+        "Şifre sıfırlanırken bir hata oluştu, lütfen tekrar deneyin.",
         [{ text: "TAMAM" }]
       );
     }
-  };
-
-  const handleRegisterPage = () => {
-    navigation.navigate("RegisterScreen");
-  };
-
-  const handleForgotPasswordPage = () => {
-    navigation.navigate("ForgotPasswordScreen");
   };
 
   return (
@@ -52,7 +43,7 @@ const LoginScreen = ({ navigation }) => {
           />
         </View>
         <View className="my-3 items-center">
-          <Text className="text-2xl font-medium">Giriş Yap</Text>
+          <Text className="text-2xl font-medium">Şifremi Unuttum</Text>
         </View>
         <View className="items-center">
           <TextInputComponent
@@ -60,32 +51,24 @@ const LoginScreen = ({ navigation }) => {
             iconName="mail"
             setLoginEmail={setEmail}
           />
-          <TextInputComponent
-            placeholder="Parola"
-            iconName="lock"
-            setLoginPassword={setPassword}
-          />
         </View>
-        <TouchableOpacity onPress={handleForgotPasswordPage} className="w-11/12 my-2 items-end" activeOpacity={0.8}>
-          <Text className="text-gray-700">Şifreni mi unuttun?</Text>
-        </TouchableOpacity>
-        <View className="items-center justify-center my-2 ">
+        <View className="items-center justify-center my-2">
           <TouchableOpacity
-            onPress={handleLogin}
+            onPress={handlePasswordReset}
             className="p-3 bg-violet-600 rounded-md w-11/12 items-center"
             activeOpacity={0.9}
           >
-            <Text className="font-medium text-white text-lg">Giriş Yap</Text>
+            <Text className="font-medium text-white text-lg">Şifremi Sıfırla</Text>
           </TouchableOpacity>
         </View>
 
         <View className="flex-row items-center justify-center gap-1.5 my-1">
-          <Text className="text-gray-700">Hesabın mı yok?</Text>
+          <Text className="text-gray-700">Geri dönmek ister misin?</Text>
           <Text
             className="text-violet-800 font-medium"
-            onPress={handleRegisterPage}
+            onPress={() => navigation.navigate("LoginScreen")}
           >
-            Kaydol!
+            Giriş Yap!
           </Text>
         </View>
       </KeyboardAwareScrollView>
@@ -93,4 +76,4 @@ const LoginScreen = ({ navigation }) => {
   );
 };
 
-export default LoginScreen;
+export default ForgotPasswordScreen;
