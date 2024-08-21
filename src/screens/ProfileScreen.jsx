@@ -23,7 +23,7 @@ import { doc, updateDoc } from "firebase/firestore";
 
 const ProfileScreen = ({ route, navigation }) => {
   const { userId, imageUrl } = route.params;
-
+  
   const [docId, setDocId] = useState("");
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");

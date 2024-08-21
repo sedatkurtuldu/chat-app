@@ -268,7 +268,7 @@ const ChatRoomScreen = ({ route, navigation }) => {
         <TextInput
           placeholder="Mesaj Yaz"
           className="p-3 ml-2 w-9/12"
-          multiline={true}
+          multiline
           value={message}
           onChangeText={setMessage}
         />

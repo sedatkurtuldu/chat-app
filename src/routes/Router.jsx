@@ -16,6 +16,7 @@ import ChatsHeaderRight from "../components/ChatsHeaderRight";
 import ChatRoomScreen from "../screens/ChatRoomScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import AddGroupModalScreen from "../screens/AddGroupModalScreen";
+import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
 
 const Stack = createStackNavigator();
 
@@ -115,6 +116,11 @@ const Router = () => {
           <Stack.Screen
             name="RegisterScreen"
             component={RegisterScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ForgotPasswordScreen"
+            component={ForgotPasswordScreen}
             options={{ headerShown: false }}
           />
         </>

@@ -1,12 +1,10 @@
-import { StyleSheet, Text, View, Image, Platform } from "react-native";
+import { Text, View, Image, Platform } from "react-native";
 import React from "react";
 import moment from "moment";
 
 const ChatComponent = ({ item, currentUser, isGroup, usersDisplayNames }) => {
   const isSender = item.SenderUserId === currentUser;
   const senderName = isGroup ? usersDisplayNames[item.SenderUserId] : "";
-
-  console.log("Item: ", item)
 
   return (
     <View
