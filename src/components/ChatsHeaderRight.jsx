@@ -8,7 +8,7 @@ import React, { useEffect, useState } from "react";
 import { getUser } from "../../server/api";
 
 const ChatsHeaderRight = ({ userId, navigation }) => {
-  const [imageUrl, setImageUrl] = useState("");
+  const [imageUrl, setImageUrl] = useState("https://www.mountsinai.on.ca/wellbeing/our-team/team-images/person-placeholder/image");
   const [loading, setLoading] = useState(false);
 
   const getUserImage = async () => {
