@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "chat-app",
+    "name": "Akko",
     "slug": "chat-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -18,7 +18,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.sedatkurtuldu.chatapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -27,6 +28,12 @@
       "eas": {
         "projectId": "89c65324-95b5-49b3-b6f3-3eb27bc4083e"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/89c65324-95b5-49b3-b6f3-3eb27bc4083e"
     }
   }
 }

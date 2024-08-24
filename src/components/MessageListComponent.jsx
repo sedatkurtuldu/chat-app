@@ -1,8 +1,10 @@
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Image, Text, TouchableOpacity, View } from "react-native";
 import React from "react";
 import moment from "moment";
-import { auth } from "../../server/firebase";
+import { auth, db } from "../../server/firebase";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import { getGroupByGroupIdQuery } from "../../server/api";
+import { arrayRemove, doc, updateDoc } from "firebase/firestore";
 
 const MessageListComponent = ({ item, navigation }) => {
   const navigateToChatRoom = () => {
@@ -25,9 +27,44 @@ const MessageListComponent = ({ item, navigation }) => {
     }
   };
 
+  const handleLongPress = async () => {
+    if (item.type === "group") {
+      Alert.alert(
+        "Gruptan Çık",
+        "Gruptan çıkmak istiyor musunuz?",
+        [
+          {
+            text: "Hayır",
+            onPress: () => console.log("Gruptan çıkılmadı"),
+            style: "cancel",
+          },
+          { 
+            text: "Evet", 
+            onPress: async () => {
+              const groupId = item.id; 
+              const groupData = await getGroupByGroupIdQuery(groupId);
+  
+              if (groupData) {
+                const groupRef = doc(db, "Groups", groupId);
+                await updateDoc(groupRef, {
+                  Users: arrayRemove(auth.currentUser.uid)
+                });
+  
+                console.log("Gruptan çıkıldı");
+              }
+            }
+          },
+        ],
+        { cancelable: true }
+      );
+    }
+  };
+
+
   return (
     <TouchableOpacity
       onPress={navigateToChatRoom}
+      onLongPress={handleLongPress}
       activeOpacity={0.8}
       className="flex-row justify-between items-center p-3 border-b border-gray-200"
     >

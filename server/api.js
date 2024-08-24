@@ -113,6 +113,17 @@ export const getGroupsQuery = () => {
   );
 };
 
+export const getGroupByGroupIdQuery = async (groupId) => {
+  const groupsRef = doc(db, GROUPS, groupId);
+  const groupSnap = await getDoc(groupsRef);
+  
+  if (groupSnap.exists()) {
+    return groupSnap.data();
+  } else {
+    return null;
+  }
+};
+
 const GROUPMESSAGES = "GroupMessages";
 
 export const getGroupMessages = (groupId) => {

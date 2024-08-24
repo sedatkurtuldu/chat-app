@@ -28,22 +28,20 @@ const RegisterScreen = ({ navigation }) => {
     navigation.navigate("LoginScreen");
   };
 
-  const askForPermissions = async () => {
-    const { status: cameraStatus } =
-      await ImagePicker.requestCameraPermissionsAsync();
-    const { status: galleryStatus } =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
+  const pickImage = async () => {
+    const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
+    const galleryPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-    if (cameraStatus !== "granted" || galleryStatus !== "granted") {
+    if (
+      cameraPermission.status !== "granted" ||
+      galleryPermission.status !== "granted"
+    ) {
       Alert.alert(
         "İzin Gerekli",
         "Üzgünüz, bu işlemi gerçekleştirebilmek için kamera ve galeri izinlerine ihtiyacımız var!"
       );
+      return;
     }
-  };
-
-  const pickImage = async () => {
-    await askForPermissions();
 
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -75,7 +73,11 @@ const RegisterScreen = ({ navigation }) => {
 
     try {
       const hashedPassword = await hashPassword(password);
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = userCredential.user;
 
       const profileImageUrl = await uploadImage(image);
@@ -89,6 +91,9 @@ const RegisterScreen = ({ navigation }) => {
         createdAt: new Date(),
         updatedAt: new Date(),
       });
+
+      Alert.alert("Başarılı", "Kayıt başarıyla tamamlandı!");
+      navigation.navigate("LoginScreen");
 
     } catch (error) {
       console.error("Kullanıcı kaydı hatası: ", error);
@@ -155,5 +160,3 @@ const RegisterScreen = ({ navigation }) => {
 };
 
 export default RegisterScreen;
-
-const styles = StyleSheet.create({});
