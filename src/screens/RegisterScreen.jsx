@@ -17,6 +17,7 @@ import { addDoc, collection } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { hashPassword } from "../../helpers/Helpers";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { signInWithEmailAndPassword } from "@firebase/auth";
 
 const RegisterScreen = ({ navigation }) => {
   const [userName, setUserName] = useState("");
@@ -92,8 +93,19 @@ const RegisterScreen = ({ navigation }) => {
         updatedAt: new Date(),
       });
 
-      Alert.alert("Başarılı", "Kayıt başarıyla tamamlandı!");
-      navigation.navigate("LoginScreen");
+      await signInWithEmailAndPassword(auth, email, password);
+
+      Alert.alert(
+        "Başarılı",
+        "Kayıt başarıyla tamamlandı!",
+        [
+          {
+            text: "Tamam",
+            onPress: () => navigation.navigate("HomeScreen"),
+          },
+        ],
+        { cancelable: false }
+      );
 
     } catch (error) {
       console.error("Kullanıcı kaydı hatası: ", error);
