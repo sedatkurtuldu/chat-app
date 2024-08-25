@@ -86,16 +86,18 @@ const ProfileScreen = ({ route, navigation }) => {
   };
 
   const handleSave = async () => {
-    if (!username || !email || !password || !image) {
+    if (!username || !email) {
       Alert.alert("Hata", "Lütfen tüm alanları doldurun.");
       return;
     }
-
+  
     try {
       const currentUser = auth.currentUser;
-
-      await updatePassword(currentUser, password);
-
+      
+      if (password) {
+        await updatePassword(currentUser, password);
+      }
+  
       const userRef = doc(db, "Users", docId);
       const profileImageUrl = await uploadImage(image);
       await updateDoc(userRef, {
@@ -103,7 +105,7 @@ const ProfileScreen = ({ route, navigation }) => {
         profileImage: profileImageUrl,
         updatedAt: new Date(),
       });
-
+  
       Alert.alert("Başarılı!", "Profiliniz başarıyla güncellenmiştir.", [
         {
           text: "TAMAM",
@@ -119,7 +121,7 @@ const ProfileScreen = ({ route, navigation }) => {
         "Kullanıcı güncellenmesi sırasında bir hata oluştu."
       );
     }
-  };
+  };  
 
   const updateEmail = async () => {
     const currentUser = auth.currentUser;

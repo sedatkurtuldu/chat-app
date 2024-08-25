@@ -24,6 +24,7 @@ const LoginScreen = ({ navigation }) => {
         password
       );
       const token = await userCredential.user.getIdToken();
+      navigation.navigate("HomeScreen");
     } catch (error) {
       console.error("Giriş yaparken bir hata oluştu: ", error.message);
       Alert.alert(
