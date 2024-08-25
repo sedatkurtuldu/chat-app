@@ -23,13 +23,13 @@ const Stack = createStackNavigator();
 const Router = () => {
   const [user, setUser] = useState(null);
   const [initializing, setInitializing] = useState(true);
-
+  
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setUser(user);
       if (initializing) setInitializing(false);
     });
-
+  
     return unsubscribe;
   }, [initializing]);
 
@@ -41,90 +41,82 @@ const Router = () => {
     );
   }
 
-  const logOut = () => {
+  const logOut = (navigation) => {
+    navigation.navigate("LoginScreen");
     auth.signOut();
+    setUser(null);
   };
-
   return (
     <Stack.Navigator initialRouteName={user ? "HomeScreen" : "LoginScreen"}>
-      {user ? (
-        <>
-          <Stack.Screen
-            name="HomeScreen"
-            component={HomeScreen}
-            options={({ navigation }) => ({
-              headerTitle: "Sohbetler",
-              headerShadowVisible: false,
-              headerTitleAlign: "left",
-              headerLeft: () => "",
-              headerRight: () => (
-                <ChatsHeaderRight userId={user.uid} navigation={navigation} />
-              ),
-              headerStyle: { backgroundColor: "#8285f1" },
-              headerTitleStyle: {
-                color: "#fff",
-                fontSize: 28,
-                fontWeight: "600",
-              },
-            })}
-          />
-          <Stack.Screen
-            name="ChatRoomScreen"
-            component={ChatRoomScreen}
-          />
-          <Stack.Screen
-            name="ProfileScreen"
-            component={ProfileScreen}
-            options={({ navigation }) => ({
-              headerTitle: "",
-              headerShadowVisible: false,
-              presentation: "modal",
-              headerRight: () => (
-                <TouchableOpacity
-                  style={{
-                    backgroundColor: "#6d28d9",
-                    padding: 8,
-                    borderRadius: 10,
-                    marginRight: 10
-                  }}
-                  activeOpacity={0.8}
-                  onPress={logOut}
-                >
-                  <Text style={{ color: "white" }}>Çıkış Yap</Text>
-                </TouchableOpacity>
-              ),
-            })}
-          />
-          <Stack.Screen
-            name="AddGroupModalScreen"
-            component={AddGroupModalScreen}
-            options={{
-              headerTitle: "Yeni Grup",
-              headerTitleAlign: "center",
-              headerShadowVisible: false,
-              presentation: "modal",
-            }}
-          />
-        </>
-      ) : (
-        <>
-          <Stack.Screen
-            name="LoginScreen"
-            component={LoginScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="RegisterScreen"
-            component={RegisterScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="ForgotPasswordScreen"
-            component={ForgotPasswordScreen}
-            options={{ headerShown: false }}
-          />
-        </>
-      )}
+      <Stack.Screen
+        name="HomeScreen"
+        component={HomeScreen}
+        options={({ navigation }) => ({
+          headerTitle: "Sohbetler",
+          headerShadowVisible: false,
+          headerTitleAlign: "left",
+          headerLeft: () => "",
+          headerRight: () =>
+            user ? (
+              <ChatsHeaderRight userId={user.uid} navigation={navigation} />
+            ) : "",
+          headerStyle: { backgroundColor: "#8285f1" },
+          headerTitleStyle: {
+            color: "#fff",
+            fontSize: 28,
+            fontWeight: "600",
+          },
+        })}
+      />
+      <Stack.Screen name="ChatRoomScreen" component={ChatRoomScreen} />
+      <Stack.Screen
+        name="ProfileScreen"
+        component={ProfileScreen}
+        options={({ navigation }) => ({
+          headerTitle: "",
+          headerShadowVisible: false,
+          presentation: "modal",
+          headerRight: () => (
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#6d28d9",
+                padding: 8,
+                borderRadius: 10,
+                marginRight: 10,
+              }}
+              activeOpacity={0.8}
+              onPress={() => logOut(navigation)}
+            >
+              <Text style={{ color: "white" }}>Çıkış Yap</Text>
+            </TouchableOpacity>
+          ),
+        })}
+      />
+      <Stack.Screen
+        name="AddGroupModalScreen"
+        component={AddGroupModalScreen}
+        options={{
+          headerTitle: "Yeni Grup",
+          headerTitleAlign: "center",
+          headerShadowVisible: false,
+          presentation: "modal",
+        }}
+      />
+      <Stack.Screen
+        name="LoginScreen"
+        component={LoginScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="RegisterScreen"
+        component={RegisterScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ForgotPasswordScreen"
+        component={ForgotPasswordScreen}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 };
