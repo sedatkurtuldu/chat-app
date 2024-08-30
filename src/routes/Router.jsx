@@ -31,7 +31,7 @@ const Router = () => {
     });
   
     return unsubscribe;
-  }, [initializing]);
+  }, [user]);
 
   if (initializing) {
     return (
@@ -51,14 +51,14 @@ const Router = () => {
       <Stack.Screen
         name="HomeScreen"
         component={HomeScreen}
-        options={({ navigation }) => ({
+        options={({ navigation, route }) => ({
           headerTitle: "Sohbetler",
           headerShadowVisible: false,
           headerTitleAlign: "left",
           headerLeft: () => "",
           headerRight: () =>
             user ? (
-              <ChatsHeaderRight userId={user.uid} navigation={navigation} />
+              <ChatsHeaderRight userId={user?.uid} navigation={navigation} updatedProfileImage={route.params?.updatedProfileImage} />
             ) : "",
           headerStyle: { backgroundColor: "#8285f1" },
           headerTitleStyle: {

@@ -110,7 +110,7 @@ const ProfileScreen = ({ route, navigation }) => {
         {
           text: "TAMAM",
           onPress: () => {
-            navigation.navigate("HomeScreen");
+            navigation.navigate("HomeScreen", { updatedProfileImage: imageUrl });
           },
         },
       ]);

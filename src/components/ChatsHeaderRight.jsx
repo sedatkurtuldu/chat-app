@@ -7,7 +7,7 @@ import {
 import React, { useEffect, useState } from "react";
 import { getUser } from "../../server/api";
 
-const ChatsHeaderRight = ({ userId, navigation }) => {
+const ChatsHeaderRight = ({ userId, navigation, updatedProfileImage }) => {  
   const [imageUrl, setImageUrl] = useState("https://www.mountsinai.on.ca/wellbeing/our-team/team-images/person-placeholder/image");
   const [loading, setLoading] = useState(false);
 
@@ -24,7 +24,7 @@ const ChatsHeaderRight = ({ userId, navigation }) => {
 
   useEffect(() => {
     getUserImage();
-  }, [userId]);
+  }, [userId, updatedProfileImage]);
 
   const navigateToProfile = () => {
     navigation.navigate("ProfileScreen", { imageUrl: imageUrl, userId: userId });
